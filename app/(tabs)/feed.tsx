@@ -78,16 +78,16 @@ export default function FeedScreen() {
               )}
             </Pressable>
             {/* Notifications */}
-            <Pressable style={{ position: 'relative' }}>
+            <Pressable onPress={() => router.push('/notifications' as any)} style={{ position: 'relative' }}>
               <Ionicons name="notifications-outline" size={24} color={colors.gray} />
               <View style={{ position: 'absolute', top: -4, right: -4, backgroundColor: colors.orange, borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
                 <Text style={{ color: '#fff', fontSize: 9, fontWeight: '800' }}>2</Text>
               </View>
             </Pressable>
-            {/* Avatar */}
-            <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: `${user.avatarColor}60` }}>
+            {/* Avatar → Profile */}
+            <Pressable onPress={() => router.push('/(tabs)/me' as any)} style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: `${user.avatarColor}60` }}>
               <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15 }}>{user.initial}</Text>
-            </View>
+            </Pressable>
           </View>
         </View>
 

@@ -10,7 +10,6 @@ const TAB_ITEMS = [
   { name: 'swipe',    icon: 'add'     as const, label: '',        isFAB: true },
   { name: 'calories', icon: 'flame'   as const, label: 'Calories' },
   { name: 'packs',    icon: 'people'  as const, label: 'Packs' },
-  { name: 'me',       icon: 'person'  as const, label: 'Me' },
 ];
 
 function CustomTabBar({ state, navigation }: any) {
@@ -57,7 +56,7 @@ function CustomTabBar({ state, navigation }: any) {
           );
         }
 
-        const flex = index < 2 ? 1.4 : 1;
+        const flex = 1;
         return (
           <Pressable key={tab.name} onPress={onPress} style={{ flex, alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name={tab.icon} size={22} color={isFocused ? colors.orange : colors.gray} />
@@ -82,7 +81,7 @@ export default function TabLayout() {
       <Tabs.Screen name="swipe" />
       <Tabs.Screen name="calories" />
       <Tabs.Screen name="packs" />
-      <Tabs.Screen name="me" />
+      <Tabs.Screen name="me" options={{ href: null }} />
       <Tabs.Screen name="events" options={{ href: null }} />
     </Tabs>
   );

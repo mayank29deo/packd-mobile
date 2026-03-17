@@ -1,5 +1,8 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useApp } from '../../lib/AppContext';
 import { colors } from '../../lib/colors';
 
 const BADGES = [
@@ -10,32 +13,47 @@ const BADGES = [
 ];
 
 export default function MeScreen() {
+  const { user } = useApp();
+  const router = useRouter();
+  const xpProgress = Math.round((user.xp % user.xpToNext) / user.xpToNext * 100);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+        <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}>
+          <Ionicons name="arrow-back" size={22} color={colors.gray} />
+        </Pressable>
+        <Text style={{ flex: 1, fontSize: 18, fontWeight: '900', color: '#fff' }}>Profile</Text>
+        <Pressable>
+          <Ionicons name="settings-outline" size={22} color={colors.gray} />
+        </Pressable>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Profile header */}
         <View style={{ padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-            <View style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: `${colors.orange}60` }}>
-              <Text style={{ fontSize: 30, fontWeight: '900', color: '#fff' }}>A</Text>
+            <View style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: `${user.avatarColor}60` }}>
+              <Text style={{ fontSize: 30, fontWeight: '900', color: '#fff' }}>{user.initial}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 20, fontWeight: '900', color: '#fff' }}>Arjun M.</Text>
-              <Text style={{ fontSize: 13, color: colors.orange, fontWeight: '700' }}>Level 7 · Trailblazer</Text>
-              <Text style={{ fontSize: 12, color: colors.gray, marginTop: 2 }}>Running · Bangalore</Text>
+              <Text style={{ fontSize: 20, fontWeight: '900', color: '#fff' }}>{user.name}</Text>
+              <Text style={{ fontSize: 13, color: colors.orange, fontWeight: '700' }}>Level {user.level} · {user.levelName}</Text>
+              <Text style={{ fontSize: 12, color: colors.gray, marginTop: 2 }}>{user.sport} · {user.area}</Text>
             </View>
           </View>
 
           {/* XP bar */}
           <View style={{ marginTop: 16, backgroundColor: colors.card2, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.border }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-              <Text style={{ fontSize: 12, color: colors.gray }}>Level 7</Text>
-              <Text style={{ fontSize: 12, color: colors.gray }}>2,840 / 3,500 XP</Text>
+              <Text style={{ fontSize: 12, color: colors.gray }}>Level {user.level}</Text>
+              <Text style={{ fontSize: 12, color: colors.gray }}>{user.xp.toLocaleString()} / {(user.xp + user.xpToNext).toLocaleString()} XP</Text>
             </View>
             <View style={{ height: 8, backgroundColor: colors.border, borderRadius: 4 }}>
-              <View style={{ height: 8, width: '81%', backgroundColor: colors.orange, borderRadius: 4 }} />
+              <View style={{ height: 8, width: `${xpProgress}%`, backgroundColor: colors.orange, borderRadius: 4 }} />
             </View>
-            <Text style={{ fontSize: 11, color: colors.gray, marginTop: 6 }}>660 XP to Level 8</Text>
+            <Text style={{ fontSize: 11, color: colors.gray, marginTop: 6 }}>{user.xpToNext} XP to Level {user.level + 1}</Text>
           </View>
         </View>
 
@@ -43,10 +61,10 @@ export default function MeScreen() {
         <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border }}>
           {[
             { value: '47', label: 'Events' },
-            { value: '14🔥', label: 'Streak' },
+            { value: `${user.streak}🔥`, label: 'Streak' },
             { value: '3', label: 'Packs' },
-          ].map(({ value, label }) => (
-            <View key={label} style={{ flex: 1, alignItems: 'center', paddingVertical: 16, borderRightWidth: 1, borderRightColor: colors.border }}>
+          ].map(({ value, label }, i, arr) => (
+            <View key={label} style={{ flex: 1, alignItems: 'center', paddingVertical: 16, borderRightWidth: i < arr.length - 1 ? 1 : 0, borderRightColor: colors.border }}>
               <Text style={{ fontSize: 20, fontWeight: '900', color: '#fff' }}>{value}</Text>
               <Text style={{ fontSize: 11, color: colors.gray, marginTop: 2 }}>{label}</Text>
             </View>
@@ -67,7 +85,7 @@ export default function MeScreen() {
         </View>
 
         {/* Pro upgrade */}
-        <View style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: colors.card, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: `${colors.gold}40` }}>
+        <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 8, backgroundColor: colors.card, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: `${colors.gold}40` }}>
           <View style={{ height: 3, backgroundColor: colors.gold }} />
           <View style={{ padding: 16 }}>
             <Text style={{ fontSize: 11, color: colors.gold, fontWeight: '700', marginBottom: 4 }}>⭐ PACKD PRO</Text>
