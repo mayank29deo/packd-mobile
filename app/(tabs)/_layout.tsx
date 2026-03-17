@@ -17,14 +17,14 @@ function TabIcon({ focused, name, label }: { focused: boolean; name: React.Compo
 function FABIcon() {
   return (
     <View style={{
-      width: 50, height: 50, borderRadius: 16,
+      width: 54, height: 54, borderRadius: 17,
       backgroundColor: colors.orange,
       alignItems: 'center', justifyContent: 'center',
-      marginBottom: 20,
-      shadowColor: colors.orange, shadowOpacity: 0.5, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
-      elevation: 8,
+      marginTop: -16,
+      shadowColor: colors.orange, shadowOpacity: 0.5, shadowRadius: 14, shadowOffset: { width: 0, height: 4 },
+      elevation: 10,
     }}>
-      <Ionicons name="add" size={26} color="#fff" />
+      <Ionicons name="add" size={28} color="#fff" />
     </View>
   );
 }
@@ -55,7 +55,10 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="swipe"
-        options={{ tabBarIcon: () => <FABIcon /> }}
+        options={{
+          tabBarIcon: () => <FABIcon />,
+          tabBarItemStyle: { alignItems: 'center', justifyContent: 'center' },
+        }}
       />
       <Tabs.Screen
         name="calories"
