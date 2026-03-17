@@ -1,5 +1,4 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../lib/colors';
 
@@ -11,8 +10,6 @@ const BADGES = [
 ];
 
 export default function MeScreen() {
-  const router = useRouter();
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -68,19 +65,6 @@ export default function MeScreen() {
             ))}
           </View>
         </View>
-
-        {/* Calorie tracker shortcut */}
-        <Pressable onPress={() => router.push('/calories')}
-          style={{ margin: 16, backgroundColor: colors.card, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: `${colors.orange}40`, flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 48, height: 48, borderRadius: 14, backgroundColor: `${colors.orange}20`, alignItems: 'center', justifyContent: 'center', marginRight: 14 }}>
-            <Text style={{ fontSize: 24 }}>🔥</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 15, fontWeight: '800', color: '#fff' }}>Calorie Tracker</Text>
-            <Text style={{ fontSize: 12, color: colors.gray, marginTop: 2 }}>Snap a photo or use voice to log meals</Text>
-          </View>
-          <Text style={{ color: colors.orange, fontSize: 18 }}>→</Text>
-        </Pressable>
 
         {/* Pro upgrade */}
         <View style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: colors.card, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: `${colors.gold}40` }}>

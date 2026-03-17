@@ -10,7 +10,6 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="event/[id]" options={{ presentation: 'card' }} />
-        <Stack.Screen name="calories" options={{ presentation: 'modal' }} />
       </Stack>
     </AppProvider>
   );

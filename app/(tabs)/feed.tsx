@@ -29,10 +29,11 @@ export default function FeedScreen() {
         <Text style={{ fontSize: 20, fontWeight: '900', color: '#fff', letterSpacing: -0.5 }}>
           PACK<Text style={{ color: colors.orange }}>D</Text>
         </Text>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Pressable onPress={() => router.push('/calories')} style={{ backgroundColor: colors.card2, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: colors.border }}>
-            <Text style={{ fontSize: 12, color: colors.orange, fontWeight: '700' }}>🔥 Calories</Text>
-          </Pressable>
+        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+          <Text style={{ fontSize: 20, color: colors.gray }}>🔔</Text>
+          <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>A</Text>
+          </View>
         </View>
       </View>
 
