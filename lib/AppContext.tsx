@@ -2,6 +2,21 @@ import React, { createContext, useContext, useState } from 'react';
 
 const API_BASE = 'https://packd.fit';
 
+export const MOCK_USER = {
+  id: 'u0',
+  name: 'Mayank Narayan',
+  firstName: 'Mayank',
+  initial: 'M',
+  avatarColor: '#E8451A',
+  level: 7,
+  levelName: 'Trailblazer',
+  xp: 3040,
+  xpToNext: 500,
+  streak: 14,
+  sport: 'Running',
+  area: 'Bangalore',
+};
+
 const MOCK_EVENTS = [
   { id: 'e1', title: 'Sunday Long Run @ Cubbon', sport: 'Running', time: 'Sun 7 AM', venue: 'Cubbon Park', area: 'Central', level: 'All levels', cost: 'Free', rsvp: 22, max: 30, organizerId: 'p1', description: 'Join us for a relaxed long run through the park.' },
   { id: 'e2', title: 'Nandi Hills Cycling Ride', sport: 'Cycling', time: 'Sat 5 AM', venue: 'Nandi Hills', area: 'North', level: 'Intermediate', cost: '₹200', rsvp: 15, max: 20, organizerId: 'p2', description: 'Epic sunrise ride up to Nandi Hills.' },
@@ -122,6 +137,7 @@ interface Post {
 }
 
 interface AppContextType {
+  user: typeof MOCK_USER;
   events: typeof MOCK_EVENTS;
   packs: typeof MOCK_PACKS;
   posts: Post[];
@@ -206,6 +222,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AppContext.Provider value={{
+      user: MOCK_USER,
       events: MOCK_EVENTS,
       packs: MOCK_PACKS,
       posts,

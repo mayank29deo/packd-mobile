@@ -22,7 +22,7 @@ function getGreeting() {
 
 export default function FeedScreen() {
   const router = useRouter();
-  const { events, posts, unreadMessages, toggleLike, createPost } = useApp();
+  const { user, events, posts, unreadMessages, toggleLike, createPost } = useApp();
   const [refreshing, setRefreshing] = useState(false);
   const [feedTab, setFeedTab] = useState('For You');
   const [discoverOpen, setDiscoverOpen] = useState(true);
@@ -65,7 +65,7 @@ export default function FeedScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
             <Text style={{ fontSize: 13, color: colors.gray }}>{getGreeting()}</Text>
-            <Text style={{ fontSize: 22, fontWeight: '900', color: '#fff' }}>Hey, Mayank 👋</Text>
+            <Text style={{ fontSize: 22, fontWeight: '900', color: '#fff' }}>Hey, {user.firstName} 👋</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             {/* Messages */}
@@ -85,21 +85,21 @@ export default function FeedScreen() {
               </View>
             </Pressable>
             {/* Avatar */}
-            <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: `${colors.orange}60` }}>
-              <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15 }}>M</Text>
+            <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: `${user.avatarColor}60` }}>
+              <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15 }}>{user.initial}</Text>
             </View>
           </View>
         </View>
 
         {/* XP bar strip */}
         <View style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.card, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: colors.border }}>
-          <Text style={{ fontSize: 11, color: colors.gray, minWidth: 90 }}>Lv 7 · Trailblazer</Text>
+          <Text style={{ fontSize: 11, color: colors.gray, minWidth: 90 }}>Lv {user.level} · {user.levelName}</Text>
           <View style={{ flex: 1, height: 5, backgroundColor: colors.border, borderRadius: 3 }}>
-            <View style={{ height: 5, width: '68%', backgroundColor: colors.orange, borderRadius: 3 }} />
+            <View style={{ height: 5, width: `${Math.round((user.xp % user.xpToNext) / user.xpToNext * 100)}%`, backgroundColor: colors.orange, borderRadius: 3 }} />
           </View>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: colors.text }}>3,040 XP</Text>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: colors.text }}>{user.xp.toLocaleString()} XP</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={{ fontSize: 13, fontWeight: '800', color: colors.orange }}>14</Text>
+            <Text style={{ fontSize: 13, fontWeight: '800', color: colors.orange }}>{user.streak}</Text>
             <Text style={{ fontSize: 13 }}>🔥</Text>
           </View>
           <Pressable style={{ backgroundColor: colors.orange, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 }}>
@@ -162,8 +162,8 @@ export default function FeedScreen() {
         <View style={{ marginHorizontal: 12, marginBottom: 12, backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
           {!composerOpen ? (
             <Pressable onPress={() => setComposerOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, gap: 10 }}>
-              <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: '#fff', fontWeight: '900', fontSize: 14 }}>M</Text>
+              <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#fff', fontWeight: '900', fontSize: 14 }}>{user.initial}</Text>
               </View>
               <Text style={{ flex: 1, color: colors.gray, fontSize: 14 }}>Share a moment, workout, or event recap...</Text>
               <Ionicons name="camera-outline" size={22} color={colors.gray} />
@@ -171,8 +171,8 @@ export default function FeedScreen() {
           ) : (
             <View style={{ padding: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-                <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: '#fff', fontWeight: '900', fontSize: 14 }}>M</Text>
+                <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ color: '#fff', fontWeight: '900', fontSize: 14 }}>{user.initial}</Text>
                 </View>
                 <TextInput
                   value={postText}

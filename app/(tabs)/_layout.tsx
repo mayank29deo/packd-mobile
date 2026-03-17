@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { View, Text } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../lib/colors';
 
@@ -10,21 +10,6 @@ function TabIcon({ focused, name, label }: { focused: boolean; name: React.Compo
       <Text style={{ fontSize: 10, color: focused ? colors.orange : colors.gray, marginTop: 3, fontWeight: focused ? '700' : '400' }}>
         {label}
       </Text>
-    </View>
-  );
-}
-
-function FABIcon() {
-  return (
-    <View style={{
-      width: 54, height: 54, borderRadius: 17,
-      backgroundColor: colors.orange,
-      alignItems: 'center', justifyContent: 'center',
-      marginTop: -16,
-      shadowColor: colors.orange, shadowOpacity: 0.5, shadowRadius: 14, shadowOffset: { width: 0, height: 4 },
-      elevation: 10,
-    }}>
-      <Ionicons name="add" size={28} color="#fff" />
     </View>
   );
 }
@@ -56,8 +41,26 @@ export default function TabLayout() {
       <Tabs.Screen
         name="swipe"
         options={{
-          tabBarIcon: () => <FABIcon />,
-          tabBarItemStyle: { alignItems: 'center', justifyContent: 'center' },
+          tabBarButton: (props) => (
+            <Pressable
+              onPress={props.onPress}
+              style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <View style={{
+                width: 54, height: 54, borderRadius: 17,
+                backgroundColor: colors.orange,
+                alignItems: 'center', justifyContent: 'center',
+                marginTop: -18,
+                shadowColor: colors.orange,
+                shadowOpacity: 0.5,
+                shadowRadius: 14,
+                shadowOffset: { width: 0, height: 4 },
+                elevation: 10,
+              }}>
+                <Ionicons name="add" size={28} color="#fff" />
+              </View>
+            </Pressable>
+          ),
         }}
       />
       <Tabs.Screen
@@ -72,7 +75,6 @@ export default function TabLayout() {
         name="me"
         options={{ tabBarIcon: ({ focused }) => <TabIcon focused={focused} name="person" label="Me" /> }}
       />
-      {/* Hide events from tab bar — accessible via links */}
       <Tabs.Screen
         name="events"
         options={{ href: null }}
