@@ -10,6 +10,8 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="event/[id]" options={{ presentation: 'card' }} />
+        <Stack.Screen name="messages" options={{ presentation: 'card' }} />
+        <Stack.Screen name="chat/[userId]" options={{ presentation: 'card' }} />
       </Stack>
     </AppProvider>
   );

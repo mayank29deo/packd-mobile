@@ -26,7 +26,7 @@ export default function CaloriesScreen() {
       Alert.alert('Permission needed', 'Please allow photo access to scan meals.');
       return;
     }
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as any, quality: 0.8 });
     if (!res.canceled && res.assets[0]) {
       await analyseImage(res.assets[0].uri);
     }
