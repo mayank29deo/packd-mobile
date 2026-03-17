@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "PACKD",
+    "slug": "packd-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "packd",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "fit.packd.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0A",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "package": "fit.packd.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-camera",
+        { "cameraPermission": "PACKD needs camera access to scan your meals for calorie tracking." }
+      ],
+      [
+        "expo-image-picker",
+        { "photosPermission": "PACKD needs photo access to analyse your meals for calorie tracking." }
+      ],
+      [
+        "expo-av",
+        { "microphonePermission": "PACKD needs microphone access for voice meal logging." }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
