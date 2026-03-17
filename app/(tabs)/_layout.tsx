@@ -39,12 +39,12 @@ function CustomTabBar({ state, navigation }: any) {
 
         if (tab.isFAB) {
           return (
-            <Pressable key={tab.name} onPress={onPress} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-start' }}>
+            <Pressable key={tab.name} onPress={onPress} style={{ flex: 1.2, alignItems: 'center', justifyContent: 'flex-start' }}>
               <View style={{
                 width: 52, height: 52, borderRadius: 16,
                 backgroundColor: colors.orange,
                 alignItems: 'center', justifyContent: 'center',
-                marginTop: -20,
+                marginTop: -8,
                 shadowColor: colors.orange,
                 shadowOpacity: 0.55,
                 shadowRadius: 14,
@@ -57,8 +57,9 @@ function CustomTabBar({ state, navigation }: any) {
           );
         }
 
+        const flex = index < 2 ? 1.4 : 1;
         return (
-          <Pressable key={tab.name} onPress={onPress} style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Pressable key={tab.name} onPress={onPress} style={{ flex, alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name={tab.icon} size={22} color={isFocused ? colors.orange : colors.gray} />
             <Text style={{ fontSize: 10, color: isFocused ? colors.orange : colors.gray, marginTop: 3, fontWeight: isFocused ? '700' : '400' }}>
               {tab.label}
