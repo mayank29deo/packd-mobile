@@ -31,13 +31,13 @@ function getGreeting() {
 }
 
 // ── Swipe Event Cards ─────────────────────────────────────────────────────────
-const CARD_H = 290;
+const CARD_H = 280;
 
 function SwipeEventCards({ events, toggleRsvp }: any) {
   const [gone, setGone] = useState<Record<number, 'right' | 'left'>>({});
   const pan = useRef(new Animated.ValueXY()).current;
 
-  // Use refs so panResponder callbacks always have fresh values
+  // Refs so panResponder (created once) always reads fresh values
   const goneRef        = useRef(gone);
   const toggleRsvpRef  = useRef(toggleRsvp);
   const eventsRef      = useRef(events);
@@ -45,75 +45,80 @@ function SwipeEventCards({ events, toggleRsvp }: any) {
   toggleRsvpRef.current = toggleRsvp;
   eventsRef.current     = events;
 
-  const getActiveIndex = () => eventsRef.current.findIndex((_: any, i: number) => !goneRef.current[i]);
+  const getActiveIndex = () =>
+    eventsRef.current.findIndex((_: any, i: number) => !goneRef.current[i]);
 
+  // Only x matters for the card — keep y fixed so ScrollView can scroll vertically
   const rotate = pan.x.interpolate({
     inputRange: [-SCREEN_W / 2, 0, SCREEN_W / 2],
     outputRange: ['-10deg', '0deg', '10deg'],
     extrapolate: 'clamp',
   });
-
   const goOpacity = pan.x.interpolate({
-    inputRange: [15, 70],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
+    inputRange: [15, 65], outputRange: [0, 1], extrapolate: 'clamp',
   });
   const nopeOpacity = pan.x.interpolate({
-    inputRange: [-70, -15],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
+    inputRange: [-65, -15], outputRange: [1, 0], extrapolate: 'clamp',
   });
-  // Subtle card border tint while swiping
   const goBorder = pan.x.interpolate({
-    inputRange: [0, 80],
-    outputRange: ['transparent', colors.green],
-    extrapolate: 'clamp',
+    inputRange: [0, 80], outputRange: ['transparent', colors.green], extrapolate: 'clamp',
   });
   const nopeBorder = pan.x.interpolate({
-    inputRange: [-80, 0],
-    outputRange: ['#EF4444', 'transparent'],
-    extrapolate: 'clamp',
+    inputRange: [-80, 0], outputRange: ['#EF4444', 'transparent'], extrapolate: 'clamp',
   });
 
+  const snapBack = useCallback(() => {
+    pan.flattenOffset();
+    Animated.spring(pan, {
+      toValue: { x: 0, y: 0 }, tension: 80, friction: 10, useNativeDriver: true,
+    }).start();
+  }, [pan]);
+
   const swipeOff = useCallback((direction: 'right' | 'left', index: number, velocityX = 0) => {
+    pan.flattenOffset();
     const toX = direction === 'right' ? SCREEN_W * 1.5 : -SCREEN_W * 1.5;
-    // Speed based on finger velocity — faster flick = shorter duration
-    const speed = Math.min(Math.abs(velocityX), 3);
-    const duration = speed > 0.8 ? 180 : 260;
+    const duration = Math.abs(velocityX) > 0.8 ? 180 : 250;
     Animated.timing(pan, {
-      toValue: { x: toX, y: 0 },
-      duration,
-      useNativeDriver: true,
+      toValue: { x: toX, y: 0 }, duration, useNativeDriver: true,
     }).start(() => {
       if (direction === 'right') toggleRsvpRef.current(eventsRef.current[index].id);
-      // Update gone state first, then reset pan on next frame so the re-render
-      // with the new top card happens before pan snaps back (eliminates stuck flash)
       setGone((prev) => ({ ...prev, [index]: direction }));
+      // Reset after React re-renders with next card (avoids flash-back)
       requestAnimationFrame(() => pan.setValue({ x: 0, y: 0 }));
     });
   }, [pan]);
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 4,
-      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
+      // Don't steal tap events on start
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      // Capture gesture only when clearly horizontal (beats ScrollView)
+      onMoveShouldSetPanResponder: (_, g) =>
+        Math.abs(g.dx) > Math.abs(g.dy) * 1.5 && Math.abs(g.dx) > 8,
+      onMoveShouldSetPanResponderCapture: (_, g) =>
+        Math.abs(g.dx) > Math.abs(g.dy) * 1.5 && Math.abs(g.dx) > 10,
+      onPanResponderGrant: () => {
+        // setOffset so animation starts from current position, not from 0
+        pan.setOffset({ x: (pan.x as any)._value, y: 0 });
+        pan.setValue({ x: 0, y: 0 });
+      },
+      // Only track x — vertical scroll remains with ScrollView
+      onPanResponderMove: Animated.event([null, { dx: pan.x }], { useNativeDriver: false }),
       onPanResponderRelease: (_, g) => {
         const idx = getActiveIndex();
-        if (idx === -1) return;
-        const fastSwipe = Math.abs(g.vx) > 0.6;
-        if (g.dx > SWIPE_THRESHOLD || (fastSwipe && g.dx > 0)) {
+        if (idx === -1) { snapBack(); return; }
+        const fastFlick = Math.abs(g.vx) > 0.5;
+        if (g.dx > SWIPE_THRESHOLD || (fastFlick && g.dx > 20)) {
           swipeOff('right', idx, g.vx);
-        } else if (g.dx < -SWIPE_THRESHOLD || (fastSwipe && g.dx < 0)) {
+        } else if (g.dx < -SWIPE_THRESHOLD || (fastFlick && g.dx < -20)) {
           swipeOff('left', idx, g.vx);
         } else {
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            tension: 80, friction: 10,
-            useNativeDriver: true,
-          }).start();
+          snapBack();
         }
       },
+      // If ScrollView takes back the gesture, snap card home
+      onPanResponderTerminate: () => { snapBack(); },
     })
   ).current;
 
