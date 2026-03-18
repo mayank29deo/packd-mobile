@@ -76,7 +76,7 @@ export default function PacksScreen() {
   const packEvents = events.filter((e) => e.organizerId === activePack.id);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView stickyHeaderIndices={[1]} showsVerticalScrollIndicator={false}>
 
         {/* ── Hero ── */}
