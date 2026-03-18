@@ -10,7 +10,7 @@ const TABS = ['Events', 'Packs'];
 
 export default function ExploreScreen() {
   const router = useRouter();
-  const { events, rsvps, packs, joinedPacks, toggleJoinPack } = useApp();
+  const { events, rsvps, toggleRsvp, packs, joinedPacks, toggleJoinPack } = useApp();
   const [activeTab, setActiveTab] = useState('Events');
   const [activeSport, setActiveSport] = useState('All');
   const [search, setSearch] = useState('');
@@ -132,9 +132,14 @@ export default function ExploreScreen() {
                   <View style={{ height: 4, backgroundColor: colors.border, borderRadius: 2 }}>
                     <View style={{ height: 4, width: `${fillPct}%`, backgroundColor: colors.orange, borderRadius: 2 }} />
                   </View>
-                  {rsvps[event.id] && (
-                    <Text style={{ fontSize: 11, color: colors.green, fontWeight: '700', marginTop: 8 }}>✓ You're going!</Text>
-                  )}
+                  <Pressable
+                    onPress={() => toggleRsvp(event.id)}
+                    style={{ marginTop: 10, alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10, borderWidth: 1.5, borderColor: rsvps[event.id] ? colors.green : colors.orange, backgroundColor: rsvps[event.id] ? `${colors.green}15` : colors.orange }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: rsvps[event.id] ? colors.green : '#fff' }}>
+                      {rsvps[event.id] ? '✓ You\'re going!' : 'RSVP'}
+                    </Text>
+                  </Pressable>
                 </View>
               </Pressable>
             );

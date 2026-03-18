@@ -31,86 +31,127 @@ function getGreeting() {
 }
 
 // ── Swipe Event Cards ─────────────────────────────────────────────────────────
+const CARD_H = 290;
+
 function SwipeEventCards({ events, toggleRsvp }: any) {
   const [gone, setGone] = useState<Record<number, 'right' | 'left'>>({});
   const pan = useRef(new Animated.ValueXY()).current;
 
-  const activeEvents = events.filter((_: any, i: number) => !gone[i]);
-  const activeIndex  = events.findIndex((_: any, i: number) => !gone[i]);
+  // Use refs so panResponder callbacks always have fresh values
+  const goneRef        = useRef(gone);
+  const toggleRsvpRef  = useRef(toggleRsvp);
+  const eventsRef      = useRef(events);
+  goneRef.current       = gone;
+  toggleRsvpRef.current = toggleRsvp;
+  eventsRef.current     = events;
+
+  const getActiveIndex = () => eventsRef.current.findIndex((_: any, i: number) => !goneRef.current[i]);
 
   const rotate = pan.x.interpolate({
     inputRange: [-SCREEN_W / 2, 0, SCREEN_W / 2],
-    outputRange: ['-12deg', '0deg', '12deg'],
+    outputRange: ['-10deg', '0deg', '10deg'],
     extrapolate: 'clamp',
   });
 
   const goOpacity = pan.x.interpolate({
-    inputRange: [10, 60],
+    inputRange: [15, 70],
     outputRange: [0, 1],
     extrapolate: 'clamp',
   });
   const nopeOpacity = pan.x.interpolate({
-    inputRange: [-60, -10],
+    inputRange: [-70, -15],
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
+  // Subtle card border tint while swiping
+  const goBorder = pan.x.interpolate({
+    inputRange: [0, 80],
+    outputRange: ['transparent', colors.green],
+    extrapolate: 'clamp',
+  });
+  const nopeBorder = pan.x.interpolate({
+    inputRange: [-80, 0],
+    outputRange: ['#EF4444', 'transparent'],
+    extrapolate: 'clamp',
+  });
 
-  const swipeOff = useCallback((direction: 'right' | 'left', index: number) => {
-    const toX = direction === 'right' ? SCREEN_W * 1.5 : -SCREEN_W * 1.5;
-    Animated.timing(pan, {
+  const swipeOff = useCallback((direction: 'right' | 'left', index: number, velocityX = 0) => {
+    const toX = direction === 'right' ? SCREEN_W * 1.6 : -SCREEN_W * 1.6;
+    // Use spring with velocity for natural feel when triggered by finger release
+    Animated.spring(pan, {
       toValue: { x: toX, y: 0 },
-      duration: 260,
+      velocity: Math.abs(velocityX) > 0.5 ? velocityX * 3 : direction === 'right' ? 8 : -8,
+      tension: 40,
+      friction: 7,
       useNativeDriver: true,
     }).start(() => {
-      if (direction === 'right') toggleRsvp(events[index].id);
+      if (direction === 'right') toggleRsvpRef.current(eventsRef.current[index].id);
       setGone((prev) => ({ ...prev, [index]: direction }));
       pan.setValue({ x: 0, y: 0 });
     });
-  }, [pan, events, toggleRsvp]);
+  }, [pan]);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 5,
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 4,
       onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
       onPanResponderRelease: (_, g) => {
-        if (g.dx > SWIPE_THRESHOLD) {
-          swipeOff('right', activeIndex);
-        } else if (g.dx < -SWIPE_THRESHOLD) {
-          swipeOff('left', activeIndex);
+        const idx = getActiveIndex();
+        if (idx === -1) return;
+        const fastSwipe = Math.abs(g.vx) > 0.6;
+        if (g.dx > SWIPE_THRESHOLD || (fastSwipe && g.dx > 0)) {
+          swipeOff('right', idx, g.vx);
+        } else if (g.dx < -SWIPE_THRESHOLD || (fastSwipe && g.dx < 0)) {
+          swipeOff('left', idx, g.vx);
         } else {
-          Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: true }).start();
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            tension: 60, friction: 8,
+            useNativeDriver: true,
+          }).start();
         }
       },
     })
   ).current;
 
-  // All swiped
+  const activeEvents = events.filter((_: any, i: number) => !gone[i]);
+  const activeIndex  = events.findIndex((_: any, i: number) => !gone[i]);
+
   if (activeEvents.length === 0) {
     return (
-      <View style={{ alignItems: 'center', paddingVertical: 28, gap: 6 }}>
-        <Text style={{ fontSize: 28 }}>🎉</Text>
-        <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>You've seen all events!</Text>
-        <Text style={{ fontSize: 12, color: colors.gray }}>Check Discover for more</Text>
+      <View style={{ marginHorizontal: 12, marginBottom: 14, backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.border, alignItems: 'center', paddingVertical: 36, gap: 8 }}>
+        <Text style={{ fontSize: 34 }}>🎉</Text>
+        <Text style={{ fontSize: 15, fontWeight: '800', color: '#fff' }}>You've seen all events!</Text>
+        <Text style={{ fontSize: 12, color: colors.gray }}>Head to Discover for more</Text>
       </View>
     );
   }
 
-  const cardH = 200;
+  const ev = activeEvents[0];
 
   return (
-    <View style={{ marginHorizontal: 12, marginBottom: 14 }}>
+    <View style={{ marginHorizontal: 12, marginBottom: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <Text style={{ fontSize: 15, fontWeight: '900', color: '#fff' }}>Discover Events</Text>
-        <Text style={{ fontSize: 11, color: colors.gray }}>{activeEvents.length} remaining · swipe to decide</Text>
+        <Text style={{ fontSize: 11, color: colors.gray }}>{activeEvents.length} left · swipe to decide</Text>
       </View>
 
       {/* Card stack */}
-      <View style={{ height: cardH + 8, position: 'relative' }}>
-        {/* Background card (next) */}
+      <View style={{ height: CARD_H + 10, position: 'relative' }}>
+
+        {/* Third card shadow */}
+        {activeEvents.length > 2 && (
+          <View style={{
+            position: 'absolute', left: 12, right: 12, top: 12, height: CARD_H,
+            backgroundColor: colors.card2, borderRadius: 20, borderWidth: 1, borderColor: colors.border, opacity: 0.5,
+          }} />
+        )}
+
+        {/* Second card */}
         {activeEvents.length > 1 && (
           <View style={{
-            position: 'absolute', left: 6, right: 6, top: 8, height: cardH,
+            position: 'absolute', left: 6, right: 6, top: 6, height: CARD_H,
             backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.border,
           }} />
         )}
@@ -119,72 +160,76 @@ function SwipeEventCards({ events, toggleRsvp }: any) {
         <Animated.View
           {...panResponder.panHandlers}
           style={{
-            position: 'absolute', left: 0, right: 0, top: 0, height: cardH,
-            backgroundColor: colors.card, borderRadius: 20, borderWidth: 1, borderColor: colors.border,
+            position: 'absolute', left: 0, right: 0, top: 0, height: CARD_H,
+            backgroundColor: colors.card, borderRadius: 20, borderWidth: 1.5,
             transform: [{ translateX: pan.x }, { translateY: pan.y }, { rotate }],
-            shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6,
+            shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 8,
+            overflow: 'hidden',
           }}
         >
-          {/* GOING overlay */}
+          {/* Animated border tint */}
+          <Animated.View style={{ position: 'absolute', inset: 0, borderRadius: 20, borderWidth: 1.5, borderColor: goBorder, zIndex: 5, pointerEvents: 'none' }} />
+          <Animated.View style={{ position: 'absolute', inset: 0, borderRadius: 20, borderWidth: 1.5, borderColor: nopeBorder, zIndex: 5, pointerEvents: 'none' }} />
+
+          {/* GOING label */}
           <Animated.View style={{
-            position: 'absolute', top: 16, left: 16, opacity: goOpacity,
-            backgroundColor: `${colors.green}20`, borderRadius: 10, borderWidth: 2, borderColor: colors.green,
-            paddingHorizontal: 12, paddingVertical: 6, zIndex: 10,
+            position: 'absolute', top: 18, left: 18, opacity: goOpacity, zIndex: 10,
+            backgroundColor: `${colors.green}22`, borderRadius: 10, borderWidth: 2, borderColor: colors.green,
+            paddingHorizontal: 14, paddingVertical: 7,
           }}>
-            <Text style={{ color: colors.green, fontWeight: '900', fontSize: 18 }}>GOING ✓</Text>
+            <Text style={{ color: colors.green, fontWeight: '900', fontSize: 20, letterSpacing: 1 }}>GOING ✓</Text>
           </Animated.View>
 
-          {/* NOPE overlay */}
+          {/* SKIP label */}
           <Animated.View style={{
-            position: 'absolute', top: 16, right: 16, opacity: nopeOpacity,
-            backgroundColor: '#EF444420', borderRadius: 10, borderWidth: 2, borderColor: '#EF4444',
-            paddingHorizontal: 12, paddingVertical: 6, zIndex: 10,
+            position: 'absolute', top: 18, right: 18, opacity: nopeOpacity, zIndex: 10,
+            backgroundColor: '#EF444422', borderRadius: 10, borderWidth: 2, borderColor: '#EF4444',
+            paddingHorizontal: 14, paddingVertical: 7,
           }}>
-            <Text style={{ color: '#EF4444', fontWeight: '900', fontSize: 18 }}>SKIP ✗</Text>
+            <Text style={{ color: '#EF4444', fontWeight: '900', fontSize: 20, letterSpacing: 1 }}>SKIP ✗</Text>
           </Animated.View>
 
           {/* Card content */}
-          {(() => {
-            const ev = activeEvents[0];
-            return (
-              <View style={{ flex: 1, padding: 16, justifyContent: 'space-between' }}>
-                <View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <View style={{ backgroundColor: `${colors.orange}20`, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 }}>
-                      <Text style={{ fontSize: 12, fontWeight: '700', color: colors.orange }}>{ev.sport}</Text>
-                    </View>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.orange }}>{ev.cost}</Text>
-                  </View>
-                  <Text style={{ fontSize: 19, fontWeight: '900', color: '#fff', marginBottom: 6 }}>{ev.title}</Text>
-                  <Text style={{ fontSize: 13, color: colors.gray, marginBottom: 2 }}>🕐 {ev.time}</Text>
-                  <Text style={{ fontSize: 13, color: colors.gray }}>📍 {ev.venue} · {ev.area}</Text>
+          <View style={{ flex: 1, padding: 18, justifyContent: 'space-between' }}>
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <View style={{ backgroundColor: `${colors.orange}22`, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 5 }}>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.orange }}>{ev.sport}</Text>
                 </View>
-
-                <View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                    <View style={{ height: 5, flex: 1, backgroundColor: colors.border, borderRadius: 3, overflow: 'hidden' }}>
-                      <View style={{ height: 5, width: `${(ev.rsvp / ev.max) * 100}%`, backgroundColor: colors.orange, borderRadius: 3 }} />
-                    </View>
-                    <Text style={{ fontSize: 11, color: colors.gray }}>{ev.rsvp}/{ev.max} going</Text>
-                  </View>
-
-                  {/* Action buttons */}
-                  <View style={{ flexDirection: 'row', gap: 12 }}>
-                    <Pressable onPress={() => swipeOff('left', activeIndex)}
-                      style={{ flex: 1, height: 44, borderRadius: 14, backgroundColor: '#EF444418', borderWidth: 1.5, borderColor: '#EF4444', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}>
-                      <Text style={{ fontSize: 18 }}>✗</Text>
-                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#EF4444' }}>Skip</Text>
-                    </Pressable>
-                    <Pressable onPress={() => swipeOff('right', activeIndex)}
-                      style={{ flex: 1, height: 44, borderRadius: 14, backgroundColor: `${colors.green}18`, borderWidth: 1.5, borderColor: colors.green, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}>
-                      <Text style={{ fontSize: 18 }}>✓</Text>
-                      <Text style={{ fontSize: 13, fontWeight: '700', color: colors.green }}>I'm Going</Text>
-                    </Pressable>
-                  </View>
-                </View>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: ev.cost === 'Free' ? colors.green : colors.orange }}>{ev.cost}</Text>
               </View>
-            );
-          })()}
+              <Text style={{ fontSize: 21, fontWeight: '900', color: '#fff', marginBottom: 10, lineHeight: 28 }}>{ev.title}</Text>
+              <View style={{ gap: 6 }}>
+                <Text style={{ fontSize: 13, color: colors.gray }}>🕐 {ev.time}</Text>
+                <Text style={{ fontSize: 13, color: colors.gray }}>📍 {ev.venue} · {ev.area}</Text>
+                <Text style={{ fontSize: 13, color: colors.gray }}>⚡ {ev.level}</Text>
+              </View>
+            </View>
+
+            <View>
+              {/* Attendee bar */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <View style={{ height: 6, flex: 1, backgroundColor: colors.border, borderRadius: 3, overflow: 'hidden' }}>
+                  <View style={{ height: 6, width: `${(ev.rsvp / ev.max) * 100}%`, backgroundColor: colors.orange, borderRadius: 3 }} />
+                </View>
+                <Text style={{ fontSize: 12, color: colors.gray }}>{ev.rsvp}/{ev.max} going</Text>
+              </View>
+
+              {/* Action buttons */}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Pressable onPress={() => swipeOff('left', activeIndex)}
+                  style={{ flex: 1, height: 48, borderRadius: 16, backgroundColor: '#EF444415', borderWidth: 1.5, borderColor: '#EF4444', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}>
+                  <Text style={{ fontSize: 18 }}>✗</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: '#EF4444' }}>Skip</Text>
+                </Pressable>
+                <Pressable onPress={() => swipeOff('right', activeIndex)}
+                  style={{ flex: 1, height: 48, borderRadius: 16, backgroundColor: `${colors.green}15`, borderWidth: 1.5, borderColor: colors.green, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 }}>
+                  <Text style={{ fontSize: 18 }}>✓</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.green }}>I'm Going</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
         </Animated.View>
       </View>
     </View>
