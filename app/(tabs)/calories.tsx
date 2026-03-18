@@ -1,13 +1,14 @@
 'use client';
 import {
   View, Text, ScrollView, Pressable, TextInput,
-  ActivityIndicator, Alert, Image,
+  ActivityIndicator, Alert, Image, Animated,
 } from 'react-native';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Audio } from 'expo-av';
 import { colors } from '../../lib/colors';
 
 const API_BASE = 'https://packd-lovat.vercel.app';
@@ -161,6 +162,13 @@ export default function CaloriesScreen() {
   const [voiceResult, setVoiceResult] = useState<ScanResult | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
+  // Recording state
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseLoop = useRef<Animated.CompositeAnimation | null>(null);
+
   // Meal log (in-memory)
   const [logs, setLogs] = useState<MealLog[]>([]);
   const streak = logs.length > 0 ? 2 : 0;
@@ -206,6 +214,91 @@ export default function CaloriesScreen() {
 
   const resetScan = () => { setPreview(null); setImageBase64(null); setScanResult(null); setScanError(null); };
   const resetVoice = () => { setVoiceText(''); setVoiceResult(null); setVoiceError(null); };
+
+  // ── Recording helpers ─────────────────────────────────────────────────────
+  const startPulse = () => {
+    pulseLoop.current = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.18, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1,    duration: 600, useNativeDriver: true }),
+      ])
+    );
+    pulseLoop.current.start();
+  };
+
+  const stopPulse = () => {
+    pulseLoop.current?.stop();
+    pulseAnim.setValue(1);
+  };
+
+  // WAV/PCM preset — Reverie STT requires uncompressed audio; 16kHz mono is optimal for STT
+  const WAV_RECORDING_OPTIONS: Audio.RecordingOptions = {
+    android: {
+      extension: '.wav',
+      outputFormat: Audio.AndroidOutputFormat.DEFAULT,
+      audioEncoder: Audio.AndroidAudioEncoder.DEFAULT,
+      sampleRate: 16000,
+      numberOfChannels: 1,
+      bitRate: 256000,
+    },
+    ios: {
+      extension: '.wav',
+      audioQuality: Audio.IOSAudioQuality.HIGH,
+      outputFormat: Audio.IOSOutputFormat.LINEARPCM,
+      sampleRate: 16000,
+      numberOfChannels: 1,
+      bitRate: 256000,
+      linearPCMBitDepth: 16,
+      linearPCMIsBigEndian: false,
+      linearPCMIsFloat: false,
+    },
+    web: {},
+  };
+
+  const startRecording = async () => {
+    try {
+      const { granted } = await Audio.requestPermissionsAsync();
+      if (!granted) { Alert.alert('Permission needed', 'Please allow microphone access.'); return; }
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+      const { recording: rec } = await Audio.Recording.createAsync(WAV_RECORDING_OPTIONS);
+      setRecording(rec);
+      setIsRecording(true);
+      setVoiceError(null);
+      startPulse();
+    } catch (e: any) {
+      Alert.alert('Recording failed', e.message);
+    }
+  };
+
+  const stopRecording = async () => {
+    if (!recording) return;
+    stopPulse();
+    setIsRecording(false);
+    setTranscribing(true);
+    try {
+      await recording.stopAndUnloadAsync();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      const uri = recording.getURI();
+      setRecording(null);
+      if (!uri) throw new Error('No audio file found');
+
+      // Read as base64 and send to Reverie via our backend
+      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' as any });
+      const res = await fetch(`${API_BASE}/api/calories/voice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audioData: base64, mimeType: 'audio/wav', lang: voiceLang }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Transcription failed');
+      // Populate text box with transcript so user can review/edit
+      setVoiceText(json.transcript || '');
+    } catch (e: any) {
+      setVoiceError(e.message || 'Transcription failed');
+    } finally {
+      setTranscribing(false);
+    }
+  };
 
   // ── Analyse image ────────────────────────────────────────────────────────────
   const analyse = async () => {
@@ -425,34 +518,58 @@ export default function CaloriesScreen() {
                     ))}
                   </View>
 
-                  {/* Describe what you ate */}
-                  <View style={{ backgroundColor: colors.card, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border, gap: 14, alignItems: 'center' }}>
-                    <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: `${colors.orange}18`, borderWidth: 2, borderColor: colors.orange, alignItems: 'center', justifyContent: 'center' }}>
-                      <Ionicons name="mic" size={32} color={colors.orange} />
-                    </View>
-                    <View style={{ alignItems: 'center', gap: 4 }}>
-                      <Text style={{ fontSize: 15, fontWeight: '800', color: '#fff' }}>Describe what you ate</Text>
-                      <Text style={{ fontSize: 12, color: colors.gray, textAlign: 'center', lineHeight: 18 }}>
-                        e.g. "I had two rotis with dal, a cup of curd and a banana"
-                      </Text>
-                    </View>
-                    <View style={{ backgroundColor: `${colors.orange}18`, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: `${colors.orange}35` }}>
-                      <Text style={{ color: colors.orange, fontWeight: '700', fontSize: 12 }}>Powered by AI ✦</Text>
-                    </View>
+                  {/* Mic button card */}
+                  <View style={{ backgroundColor: colors.card, borderRadius: 18, padding: 24, borderWidth: 1, borderColor: isRecording ? colors.orange : colors.border, alignItems: 'center', gap: 16 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>
+                      {isRecording ? 'Recording… tap to stop' : transcribing ? 'Transcribing…' : 'Tap mic to record'}
+                    </Text>
+
+                    <Pressable
+                      onPress={isRecording ? stopRecording : startRecording}
+                      disabled={transcribing || voiceLoading}
+                      style={{ alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Animated.View style={{
+                        width: 88, height: 88, borderRadius: 44,
+                        backgroundColor: isRecording ? `${colors.orange}25` : 'transparent',
+                        alignItems: 'center', justifyContent: 'center',
+                        transform: [{ scale: pulseAnim }],
+                      }}>
+                        <View style={{
+                          width: 72, height: 72, borderRadius: 36,
+                          backgroundColor: isRecording ? colors.orange : `${colors.orange}18`,
+                          borderWidth: 2,
+                          borderColor: colors.orange,
+                          alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          {transcribing
+                            ? <ActivityIndicator size="small" color={colors.orange} />
+                            : <Ionicons name={isRecording ? 'stop' : 'mic'} size={32} color={isRecording ? '#fff' : colors.orange} />
+                          }
+                        </View>
+                      </Animated.View>
+                    </Pressable>
+
+                    <Text style={{ fontSize: 12, color: colors.gray, textAlign: 'center', lineHeight: 18 }}>
+                      {isRecording
+                        ? 'Speak clearly — "I had two rotis, dal and a banana"'
+                        : 'Or type your meal below'}
+                    </Text>
                   </View>
 
+                  {/* Editable transcript / manual input */}
                   <TextInput
                     value={voiceText}
                     onChangeText={setVoiceText}
-                    placeholder="Type what you ate... e.g. 2 rotis, dal makhani, 1 glass of lassi"
+                    placeholder="Transcript appears here — or type manually…"
                     placeholderTextColor={colors.gray}
                     multiline
-                    style={{ backgroundColor: colors.card, borderRadius: 14, padding: 14, color: '#fff', fontSize: 14, borderWidth: 1, borderColor: colors.border, minHeight: 100, textAlignVertical: 'top' }}
+                    style={{ backgroundColor: colors.card, borderRadius: 14, padding: 14, color: '#fff', fontSize: 14, borderWidth: 1, borderColor: voiceText ? colors.orange : colors.border, minHeight: 100, textAlignVertical: 'top' }}
                   />
 
                   {voiceError && (
                     <View style={{ backgroundColor: '#EF444410', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#EF444430' }}>
-                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#F87171' }}>Voice analysis failed</Text>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#F87171' }}>Failed</Text>
                       <Text style={{ fontSize: 12, color: colors.gray, marginTop: 2 }}>{voiceError}</Text>
                       <Pressable onPress={resetVoice}><Text style={{ fontSize: 12, color: colors.orange, marginTop: 6 }}>Try again</Text></Pressable>
                     </View>
@@ -467,7 +584,7 @@ export default function CaloriesScreen() {
                       </View>
                     </View>
                   ) : (
-                    <Pressable onPress={analyseVoice} disabled={!voiceText.trim()}
+                    <Pressable onPress={analyseVoice} disabled={!voiceText.trim() || transcribing}
                       style={{ backgroundColor: voiceText.trim() ? colors.orange : colors.card2, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: voiceText.trim() ? colors.orange : colors.border }}>
                       <Text style={{ color: voiceText.trim() ? '#fff' : colors.gray, fontWeight: '900', fontSize: 15 }}>Analyse Meal →</Text>
                     </Pressable>
