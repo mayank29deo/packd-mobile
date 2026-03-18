@@ -49,19 +49,20 @@ export default function LoginScreen() {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      // makeRedirectUri() returns exp://... in Expo Go, packd:// in production builds
-      const redirectTo = AuthSession.makeRedirectUri();
+      const redirectTo = AuthSession.makeRedirectUri({ scheme: 'packd' });
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo, skipBrowserRedirect: true },
       });
       if (error) throw error;
+      if (!data.url) throw new Error('No OAuth URL returned');
 
-      const res = await WebBrowser.openAuthSessionAsync(data.url ?? '', redirectTo);
+      const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
       if (res.type === 'success' && res.url) {
-        const url  = new URL(res.url);
-        const code = url.searchParams.get('code');
+        // Use regex instead of new URL() — custom schemes can fail URL parsing
+        const codeMatch = res.url.match(/[?&#]code=([^&]+)/);
+        const code = codeMatch?.[1];
         if (code) {
           const { error: exchErr } = await supabase.auth.exchangeCodeForSession(code);
           if (exchErr) throw exchErr;
