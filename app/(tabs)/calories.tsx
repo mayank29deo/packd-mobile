@@ -263,7 +263,7 @@ export default function CaloriesScreen() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
 
       {/* ── Sticky header + tabs ── */}
       <View style={{ borderBottomWidth: 1, borderBottomColor: colors.border }}>

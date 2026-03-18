@@ -35,7 +35,7 @@ export default function MeScreen() {
   const myPacks = packs.filter(p => joinedPacks[p.id]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView showsVerticalScrollIndicator={false} stickyHeaderIndices={[1]}>
 
         {/* ── Profile Hero ── */}

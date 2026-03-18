@@ -29,7 +29,7 @@ export default function ExploreScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header */}
       <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 0, borderBottomWidth: 1, borderBottomColor: colors.border }}>
         <Text style={{ fontSize: 20, fontWeight: '900', color: '#fff', marginBottom: 10 }}>Explore</Text>

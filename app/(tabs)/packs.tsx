@@ -41,11 +41,11 @@ export default function PacksScreen() {
              p.sport.toLowerCase().includes(search.toLowerCase())
     );
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
           <Text style={{ fontSize: 20, fontWeight: '900', color: '#fff' }}>Packs</Text>
         </View>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 10 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 90 }}>
           <TextInput
             value={search} onChangeText={setSearch}
             placeholder="Search packs or sports..."
