@@ -1,7 +1,10 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Session } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 
 const API_BASE = 'https://packd.fit';
 
+// ─── Mock fallback data (used until real API is wired) ────────────────────────
 export const MOCK_USER = {
   id: 'u0',
   name: 'Mayank Narayan',
@@ -46,111 +49,51 @@ const MOCK_PACKS = [
 ];
 
 export const MOCK_POSTS = [
-  {
-    id: 'post1',
-    user: 'Mayank Narayan',
-    initial: 'M',
-    avatarColor: '#E8451A',
-    sport: 'Running',
-    time: '2d ago',
-    xp: '+50 XP',
-    content: 'First 5k done, thanks to the team and special mention to @Dhuman',
-    images: ['https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=400&q=80', 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&q=80'],
-    likes: 24,
-    comments: 6,
-    liked: false,
-  },
-  {
-    id: 'post2',
-    user: 'Arjun M.',
-    initial: 'A',
-    avatarColor: '#E8451A',
-    sport: 'Running',
-    time: '23m ago',
-    xp: '+420 XP',
-    content: 'New PB! 10K in 45:22 🔥 The 5AM crew never disappoints.',
-    images: [],
-    likes: 47,
-    comments: 12,
-    liked: false,
-  },
-  {
-    id: 'post3',
-    user: 'Priya S.',
-    initial: 'P',
-    avatarColor: '#7C3AED',
-    sport: 'Yoga',
-    time: '1h ago',
-    xp: '+120 XP',
-    content: 'Morning yoga session at Lalbagh was incredibly peaceful today 🧘',
-    images: ['https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80'],
-    likes: 31,
-    comments: 8,
-    liked: false,
-  },
-  {
-    id: 'post4',
-    user: 'Rahul K.',
-    initial: 'R',
-    avatarColor: '#2563EB',
-    sport: 'Cycling',
-    time: '2h ago',
-    xp: '+380 XP',
-    content: 'Nandi Hills at sunrise — nothing beats this. 45km done ✅',
-    images: ['https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=400&q=80'],
-    likes: 64,
-    comments: 19,
-    liked: false,
-  },
+  { id: 'post1', user: 'Mayank Narayan', initial: 'M', avatarColor: '#E8451A', sport: 'Running', time: '2d ago', xp: '+50 XP', content: 'First 5k done, thanks to the team and special mention to @Dhuman', images: ['https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=400&q=80', 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&q=80'], likes: 24, comments: 6, liked: false },
+  { id: 'post2', user: 'Arjun M.', initial: 'A', avatarColor: '#E8451A', sport: 'Running', time: '23m ago', xp: '+420 XP', content: 'New PB! 10K in 45:22 🔥 The 5AM crew never disappoints.', images: [], likes: 47, comments: 12, liked: false },
+  { id: 'post3', user: 'Priya S.', initial: 'P', avatarColor: '#7C3AED', sport: 'Yoga', time: '1h ago', xp: '+120 XP', content: 'Morning yoga session at Lalbagh was incredibly peaceful today 🧘', images: ['https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80'], likes: 31, comments: 8, liked: false },
+  { id: 'post4', user: 'Rahul K.', initial: 'R', avatarColor: '#2563EB', sport: 'Cycling', time: '2h ago', xp: '+380 XP', content: 'Nandi Hills at sunrise — nothing beats this. 45km done ✅', images: ['https://images.unsplash.com/photo-1541625602330-2277a4c46182?w=400&q=80'], likes: 64, comments: 19, liked: false },
 ];
 
 export const MOCK_CONVERSATIONS: Record<string, any> = {
-  'u1': {
-    user: { id: 'u1', name: 'Arjun M.', initial: 'A', avatarColor: '#E8451A', sport: 'Running', online: true },
-    messages: [
-      { id: 'm1', text: 'Hey! See you at the 5AM run tomorrow?', fromMe: false, time: '9:42 AM' },
-      { id: 'm2', text: 'Absolutely! Don\'t be late 😄', fromMe: true, time: '9:45 AM' },
-    ],
-    unread: 1,
-  },
-  'u2': {
-    user: { id: 'u2', name: 'Priya S.', initial: 'P', avatarColor: '#7C3AED', sport: 'Yoga', online: false },
-    messages: [
-      { id: 'm3', text: 'Great session today!', fromMe: false, time: 'Yesterday' },
-    ],
-    unread: 1,
-  },
+  'u1': { user: { id: 'u1', name: 'Arjun M.', initial: 'A', avatarColor: '#E8451A', sport: 'Running', online: true }, messages: [{ id: 'm1', text: 'Hey! See you at the 5AM run tomorrow?', fromMe: false, time: '9:42 AM' }, { id: 'm2', text: "Absolutely! Don't be late 😄", fromMe: true, time: '9:45 AM' }], unread: 1 },
+  'u2': { user: { id: 'u2', name: 'Priya S.', initial: 'P', avatarColor: '#7C3AED', sport: 'Yoga', online: false }, messages: [{ id: 'm3', text: 'Great session today!', fromMe: false, time: 'Yesterday' }], unread: 1 },
 };
 
 export const SPORT_COLORS: Record<string, string> = {
-  Running:    '#F97316',
-  Cycling:    '#3B82F6',
-  Yoga:       '#8B5CF6',
-  Swimming:   '#06B6D4',
-  Football:   '#22C55E',
-  Basketball: '#EA580C',
-  Tennis:     '#EAB308',
-  Hiking:     '#10B981',
-  CrossFit:   '#EF4444',
-  Badminton:  '#EC4899',
+  Running: '#F97316', Cycling: '#3B82F6', Yoga: '#8B5CF6', Swimming: '#06B6D4',
+  Football: '#22C55E', Basketball: '#EA580C', Tennis: '#EAB308', Hiking: '#10B981',
+  CrossFit: '#EF4444', Badminton: '#EC4899',
 };
 
+// ─── Build user object from Supabase session ──────────────────────────────────
+function buildUserFromSession(session: Session): typeof MOCK_USER {
+  const su = session.user;
+  const meta = su.user_metadata || {};
+  const name: string = meta.full_name || meta.name || su.email?.split('@')[0] || 'Athlete';
+  const firstName = name.split(' ')[0];
+  const initial = firstName[0]?.toUpperCase() ?? 'A';
+  return {
+    ...MOCK_USER,                      // keep XP/streak/level until real DB is wired
+    id:         su.id,
+    name,
+    firstName,
+    initial,
+    username:   meta.preferred_username || meta.user_name || firstName.toLowerCase(),
+    avatarColor: '#E8451A',
+  };
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface Post {
-  id: string;
-  user: string;
-  initial: string;
-  avatarColor: string;
-  sport: string;
-  time: string;
-  xp: string;
-  content: string;
-  images: string[];
-  likes: number;
-  comments: number;
-  liked: boolean;
+  id: string; user: string; initial: string; avatarColor: string; sport: string;
+  time: string; xp: string; content: string; images: string[]; likes: number;
+  comments: number; liked: boolean;
 }
 
 interface AppContextType {
+  session: Session | null;
+  authLoading: boolean;
   user: typeof MOCK_USER;
   events: typeof MOCK_EVENTS;
   packs: typeof MOCK_PACKS;
@@ -165,91 +108,76 @@ interface AppContextType {
   sendMessage: (userId: string, text: string) => void;
   markRead: (userId: string) => void;
   createPost: (content: string, images: string[], sport: string) => void;
+  signOut: () => Promise<void>;
   apiBase: string;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [rsvps, setRsvps] = useState<Record<string, boolean>>({});
-  const [joinedPacks, setJoinedPacks] = useState<Record<string, boolean>>({});
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
+  const [session, setSession]           = useState<Session | null>(null);
+  const [authLoading, setAuthLoading]   = useState(true);
+  const [rsvps, setRsvps]               = useState<Record<string, boolean>>({});
+  const [joinedPacks, setJoinedPacks]   = useState<Record<string, boolean>>({});
+  const [posts, setPosts]               = useState<Post[]>(MOCK_POSTS);
   const [conversations, setConversations] = useState(MOCK_CONVERSATIONS);
+
+  // ── Listen for auth changes ──────────────────────────────────────────────────
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess);
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── Derive user from session or fall back to mock ────────────────────────────
+  const user = session ? buildUserFromSession(session) : MOCK_USER;
 
   const unreadMessages = Object.values(conversations).reduce(
     (sum: number, c: any) => sum + (c.unread || 0), 0
   );
 
-  const toggleRsvp = (id: string) =>
-    setRsvps((prev) => ({ ...prev, [id]: !prev[id] }));
-
-  const toggleJoinPack = (id: string) =>
-    setJoinedPacks((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleRsvp     = (id: string) => setRsvps(p => ({ ...p, [id]: !p[id] }));
+  const toggleJoinPack = (id: string) => setJoinedPacks(p => ({ ...p, [id]: !p[id] }));
 
   const toggleLike = (postId: string) =>
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
-          ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 }
-          : p
-      )
-    );
+    setPosts(prev => prev.map(p =>
+      p.id === postId ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p
+    ));
 
-  const sendMessage = (userId: string, text: string) => {
-    setConversations((prev) => ({
+  const sendMessage = (userId: string, text: string) =>
+    setConversations(prev => ({
       ...prev,
-      [userId]: {
-        ...prev[userId],
-        messages: [
-          ...prev[userId].messages,
-          { id: `m${Date.now()}`, text, fromMe: true, time: 'Now' },
-        ],
-        unread: 0,
-      },
+      [userId]: { ...prev[userId], messages: [...prev[userId].messages, { id: `m${Date.now()}`, text, fromMe: true, time: 'Now' }], unread: 0 },
     }));
-  };
 
-  const markRead = (userId: string) => {
-    setConversations((prev) => ({
-      ...prev,
-      [userId]: { ...prev[userId], unread: 0 },
-    }));
-  };
+  const markRead = (userId: string) =>
+    setConversations(prev => ({ ...prev, [userId]: { ...prev[userId], unread: 0 } }));
 
-  const createPost = (content: string, images: string[], sport: string) => {
-    const newPost: Post = {
+  const createPost = (content: string, images: string[], sport: string) =>
+    setPosts(prev => [{
       id: `post${Date.now()}`,
-      user: 'Mayank Narayan',
-      initial: 'M',
-      avatarColor: '#E8451A',
-      sport,
-      time: 'Just now',
-      xp: '+50 XP',
-      content,
-      images,
-      likes: 0,
-      comments: 0,
-      liked: false,
-    };
-    setPosts((prev) => [newPost, ...prev]);
-  };
+      user: user.name, initial: user.initial, avatarColor: user.avatarColor,
+      sport, time: 'Just now', xp: '+50 XP', content, images,
+      likes: 0, comments: 0, liked: false,
+    }, ...prev]);
+
+  const signOut = async () => { await supabase.auth.signOut(); };
 
   return (
     <AppContext.Provider value={{
-      user: MOCK_USER,
-      events: MOCK_EVENTS,
-      packs: MOCK_PACKS,
-      posts,
-      conversations,
-      unreadMessages,
-      rsvps,
-      joinedPacks,
-      toggleRsvp,
-      toggleJoinPack,
-      toggleLike,
-      sendMessage,
-      markRead,
-      createPost,
+      session, authLoading, user,
+      events: MOCK_EVENTS, packs: MOCK_PACKS, posts, conversations,
+      unreadMessages, rsvps, joinedPacks,
+      toggleRsvp, toggleJoinPack, toggleLike,
+      sendMessage, markRead, createPost, signOut,
       apiBase: API_BASE,
     }}>
       {children}

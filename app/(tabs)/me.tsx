@@ -26,7 +26,7 @@ type ProfileTab = typeof PROFILE_TABS[number];
 import { useState } from 'react';
 
 export default function MeScreen() {
-  const { user, packs, joinedPacks } = useApp();
+  const { user, packs, joinedPacks, signOut } = useApp();
   const router = useRouter();
   const [tab, setTab] = useState<ProfileTab>('Activity');
 
@@ -49,6 +49,9 @@ export default function MeScreen() {
             <Text style={{ flex: 1, fontSize: 16, fontWeight: '800', color: '#fff' }}>Profile</Text>
             <Pressable style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}>
               <Text style={{ fontSize: 12, fontWeight: '700', color: colors.text }}>Edit</Text>
+            </Pressable>
+            <Pressable onPress={signOut} style={{ marginLeft: 8, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: '#FF444420' }}>
+              <Ionicons name="log-out-outline" size={16} color="#FF4444" />
             </Pressable>
           </View>
 
