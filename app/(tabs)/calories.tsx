@@ -278,6 +278,7 @@ export default function CaloriesScreen() {
         body: JSON.stringify({ audioData: base64, mimeType: 'audio/wav', lang: voiceLang }),
       });
       const json = await res.json();
+      if (json.sttFailed) { setSttFailed(true); setVoiceError('Speech recognition unavailable'); return; }
       if (!res.ok || !json.success) throw new Error(json.error || 'Transcription failed');
       setVoiceText(json.transcript || '');
     } catch (e: any) {
