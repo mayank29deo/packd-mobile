@@ -7,12 +7,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { supabase } from '../../lib/supabase';
+import { useApp } from '../../lib/AppContext';
 import { colors } from '../../lib/colors';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { enterGuestMode } = useApp();
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
@@ -157,6 +159,15 @@ export default function LoginScreen() {
                 {mode === 'login' ? 'Sign Up' : 'Sign In'}
               </Text>
             </Text>
+          </Pressable>
+
+          {/* Guest mode */}
+          <Pressable onPress={() => { enterGuestMode(); router.replace('/(tabs)/feed' as any); }}
+            style={{ marginTop: 16, alignItems: 'center', paddingVertical: 10 }}>
+            <Text style={{ color: colors.gray, fontSize: 13 }}>
+              Continue as <Text style={{ color: colors.text, fontWeight: '600' }}>Guest</Text>
+            </Text>
+            <Text style={{ color: colors.gray, fontSize: 11, marginTop: 2 }}>Browse without an account</Text>
           </Pressable>
 
         </ScrollView>

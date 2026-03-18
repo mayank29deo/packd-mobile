@@ -94,6 +94,8 @@ interface Post {
 interface AppContextType {
   session: Session | null;
   authLoading: boolean;
+  isGuest: boolean;
+  enterGuestMode: () => void;
   user: typeof MOCK_USER;
   events: typeof MOCK_EVENTS;
   packs: typeof MOCK_PACKS;
@@ -117,6 +119,7 @@ const AppContext = createContext<AppContextType | null>(null);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession]           = useState<Session | null>(null);
   const [authLoading, setAuthLoading]   = useState(true);
+  const [isGuest, setIsGuest]           = useState(false);
   const [rsvps, setRsvps]               = useState<Record<string, boolean>>({});
   const [joinedPacks, setJoinedPacks]   = useState<Record<string, boolean>>({});
   const [posts, setPosts]               = useState<Post[]>(MOCK_POSTS);
@@ -169,11 +172,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       likes: 0, comments: 0, liked: false,
     }, ...prev]);
 
-  const signOut = async () => { await supabase.auth.signOut(); };
+  const signOut = async () => { await supabase.auth.signOut(); setIsGuest(false); };
+  const enterGuestMode = () => setIsGuest(true);
 
   return (
     <AppContext.Provider value={{
-      session, authLoading, user,
+      session, authLoading, isGuest, enterGuestMode, user,
       events: MOCK_EVENTS, packs: MOCK_PACKS, posts, conversations,
       unreadMessages, rsvps, joinedPacks,
       toggleRsvp, toggleJoinPack, toggleLike,

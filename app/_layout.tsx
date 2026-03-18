@@ -4,19 +4,19 @@ import { useEffect } from 'react';
 import { AppProvider, useApp } from '../lib/AppContext';
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { session, authLoading } = useApp();
+  const { session, authLoading, isGuest } = useApp();
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
     if (authLoading) return;
     const inAuth = segments[0] === '(auth)';
-    if (!session && !inAuth) {
+    if (!session && !isGuest && !inAuth) {
       router.replace('/(auth)/login');
-    } else if (session && inAuth) {
+    } else if ((session || isGuest) && inAuth) {
       router.replace('/(tabs)/feed');
     }
-  }, [session, authLoading, segments]);
+  }, [session, authLoading, isGuest, segments]);
 
   return <>{children}</>;
 }
