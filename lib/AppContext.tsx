@@ -6,6 +6,7 @@ export const MOCK_USER = {
   id: 'u0',
   name: 'Mayank Narayan',
   firstName: 'Mayank',
+  username: 'athlete1',
   initial: 'M',
   avatarColor: '#E8451A',
   level: 7,
@@ -14,8 +15,21 @@ export const MOCK_USER = {
   xpToNext: 500,
   streak: 14,
   sport: 'Running',
+  sports: ['Running', 'Swimming', 'Cycling', 'Football'],
   area: 'Bangalore',
+  bio: 'Morning runner. Yoga enthusiast. Coffee addict.',
+  totalSessions: 63,
+  totalKm: 284,
+  eventsJoined: 47,
+  packsCount: 3,
 };
+
+export const MOCK_ACTIVITIES = [
+  { id: 'a1', icon: '🏃', title: '10K Morning Run',   date: 'Today',      distance: '10.2 km', pace: '5:13/km', xp: 280 },
+  { id: 'a2', icon: '🚴', title: 'Nandi Hills Ride',  date: 'Yesterday',  distance: '45 km',   pace: '22 km/h', xp: 420 },
+  { id: 'a3', icon: '🧘', title: 'Yoga — Lalbagh',    date: '2 days ago', distance: null,       pace: '45 min',  xp: 120 },
+  { id: 'a4', icon: '🏃', title: 'Interval Training', date: '3 days ago', distance: '6.5 km',  pace: '4:48/km', xp: 190 },
+];
 
 const MOCK_EVENTS = [
   { id: 'e1', title: 'Sunday Long Run @ Cubbon', sport: 'Running', time: 'Sun 7 AM', venue: 'Cubbon Park', area: 'Central', level: 'All levels', cost: 'Free', rsvp: 22, max: 30, organizerId: 'p1', description: 'Join us for a relaxed long run through the park.' },
