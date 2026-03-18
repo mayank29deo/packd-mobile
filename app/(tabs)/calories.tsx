@@ -10,7 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { colors } from '../../lib/colors';
 
-const API_BASE = 'https://packd.fit';
+const API_BASE = 'https://packd-lovat.vercel.app';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ScanResult {
