@@ -121,7 +121,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [authLoading, setAuthLoading]   = useState(true);
   const [isGuest, setIsGuest]           = useState(false);
   const [rsvps, setRsvps]               = useState<Record<string, boolean>>({});
-  const [joinedPacks, setJoinedPacks]   = useState<Record<string, boolean>>({});
+  const [joinedPacks, setJoinedPacks]   = useState<Record<string, boolean>>({ p1: true });
   const [posts, setPosts]               = useState<Post[]>(MOCK_POSTS);
   const [conversations, setConversations] = useState(MOCK_CONVERSATIONS);
 

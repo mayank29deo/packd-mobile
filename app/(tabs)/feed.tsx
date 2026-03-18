@@ -76,18 +76,20 @@ function SwipeEventCards({ events, toggleRsvp }: any) {
   });
 
   const swipeOff = useCallback((direction: 'right' | 'left', index: number, velocityX = 0) => {
-    const toX = direction === 'right' ? SCREEN_W * 1.6 : -SCREEN_W * 1.6;
-    // Use spring with velocity for natural feel when triggered by finger release
-    Animated.spring(pan, {
+    const toX = direction === 'right' ? SCREEN_W * 1.5 : -SCREEN_W * 1.5;
+    // Speed based on finger velocity — faster flick = shorter duration
+    const speed = Math.min(Math.abs(velocityX), 3);
+    const duration = speed > 0.8 ? 180 : 260;
+    Animated.timing(pan, {
       toValue: { x: toX, y: 0 },
-      velocity: Math.abs(velocityX) > 0.5 ? velocityX * 3 : direction === 'right' ? 8 : -8,
-      tension: 40,
-      friction: 7,
+      duration,
       useNativeDriver: true,
     }).start(() => {
       if (direction === 'right') toggleRsvpRef.current(eventsRef.current[index].id);
+      // Update gone state first, then reset pan on next frame so the re-render
+      // with the new top card happens before pan snaps back (eliminates stuck flash)
       setGone((prev) => ({ ...prev, [index]: direction }));
-      pan.setValue({ x: 0, y: 0 });
+      requestAnimationFrame(() => pan.setValue({ x: 0, y: 0 }));
     });
   }, [pan]);
 
@@ -107,7 +109,7 @@ function SwipeEventCards({ events, toggleRsvp }: any) {
         } else {
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
-            tension: 60, friction: 8,
+            tension: 80, friction: 10,
             useNativeDriver: true,
           }).start();
         }
