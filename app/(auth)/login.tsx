@@ -52,7 +52,6 @@ export default function LoginScreen() {
     setGoogleLoading(true);
     try {
       const redirectTo = AuthSession.makeRedirectUri({ scheme: 'packd' });
-      Alert.alert('Debug — redirectTo', redirectTo); // temporary debug
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -62,7 +61,6 @@ export default function LoginScreen() {
       if (!data.url) throw new Error('No OAuth URL returned');
 
       const res = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      Alert.alert('Debug — res', JSON.stringify(res)); // temporary debug
 
       if (res.type === 'success' && res.url) {
         const codeMatch = res.url.match(/[?&#]code=([^&]+)/);
