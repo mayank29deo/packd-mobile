@@ -13,6 +13,16 @@ import { colors } from '../../lib/colors';
 const FEED_TABS = ['For You', 'Following', 'Discover'];
 const { width: SCREEN_W } = Dimensions.get('window');
 
+// Simulated "following" list — people whose posts show in Following tab
+const FOLLOWING_USERS = new Set(['Arjun M.', 'Priya S.']);
+
+const SUGGESTED_ATHLETES = [
+  { id: 's1', name: 'Sneha D.',  initial: 'S', avatarColor: '#059669', sport: 'Cycling',  xp: 3210 },
+  { id: 's2', name: 'Vikram N.', initial: 'V', avatarColor: '#D97706', sport: 'Running',  xp: 2980 },
+  { id: 's3', name: 'Ananya T.', initial: 'A', avatarColor: '#7C3AED', sport: 'Yoga',     xp: 2750 },
+  { id: 's4', name: 'Rohan P.',  initial: 'R', avatarColor: '#2563EB', sport: 'Football', xp: 2600 },
+];
+
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 12) return 'Good morning,';
@@ -22,14 +32,15 @@ function getGreeting() {
 
 export default function FeedScreen() {
   const router = useRouter();
-  const { user, events, posts, unreadMessages, toggleLike, createPost } = useApp();
-  const [refreshing, setRefreshing] = useState(false);
-  const [feedTab, setFeedTab] = useState('For You');
+  const { user, events, posts, packs, unreadMessages, toggleLike, createPost, rsvps, toggleRsvp } = useApp();
+  const [refreshing, setRefreshing]     = useState(false);
+  const [feedTab, setFeedTab]           = useState('For You');
   const [discoverOpen, setDiscoverOpen] = useState(true);
   const [composerOpen, setComposerOpen] = useState(false);
-  const [postText, setPostText] = useState('');
-  const [postImages, setPostImages] = useState<string[]>([]);
-  const [postSport] = useState('Running');
+  const [postText, setPostText]         = useState('');
+  const [postImages, setPostImages]     = useState<string[]>([]);
+  const [postSport]                     = useState('Running');
+  const [followed, setFollowed]         = useState<Record<string, boolean>>({});
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -58,6 +69,8 @@ export default function FeedScreen() {
     setComposerOpen(false);
   };
 
+  const followingPosts = posts.filter((p) => FOLLOWING_USERS.has(p.user));
+
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* ── Header ── */}
@@ -68,7 +81,6 @@ export default function FeedScreen() {
             <Text style={{ fontSize: 22, fontWeight: '900', color: '#fff' }}>Hey, {user.firstName} 👋</Text>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            {/* Messages */}
             <Pressable onPress={() => router.push('/messages' as any)} style={{ position: 'relative' }}>
               <Ionicons name="chatbubble-outline" size={24} color={colors.gray} />
               {unreadMessages > 0 && (
@@ -77,14 +89,12 @@ export default function FeedScreen() {
                 </View>
               )}
             </Pressable>
-            {/* Notifications */}
             <Pressable onPress={() => router.push('/notifications' as any)} style={{ position: 'relative' }}>
               <Ionicons name="notifications-outline" size={24} color={colors.gray} />
               <View style={{ position: 'absolute', top: -4, right: -4, backgroundColor: colors.orange, borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 }}>
                 <Text style={{ color: '#fff', fontSize: 9, fontWeight: '800' }}>2</Text>
               </View>
             </Pressable>
-            {/* Avatar → Profile */}
             <Pressable onPress={() => router.push('/(tabs)/me' as any)} style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: `${user.avatarColor}60` }}>
               <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15 }}>{user.initial}</Text>
             </Pressable>
@@ -111,7 +121,8 @@ export default function FeedScreen() {
       {/* ── Feed tabs ── */}
       <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border }}>
         {FEED_TABS.map((tab) => (
-          <Pressable key={tab} onPress={() => setFeedTab(tab)} style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: feedTab === tab ? colors.orange : 'transparent' }}>
+          <Pressable key={tab} onPress={() => setFeedTab(tab)}
+            style={{ flex: 1, alignItems: 'center', paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: feedTab === tab ? colors.orange : 'transparent' }}>
             <Text style={{ fontSize: 13, fontWeight: '700', color: feedTab === tab ? colors.orange : colors.gray }}>{tab}</Text>
           </Pressable>
         ))}
@@ -121,113 +132,179 @@ export default function FeedScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.orange} />}
       >
-        {/* ── Discover events banner ── */}
-        <Pressable onPress={() => setDiscoverOpen((v) => !v)}
-          style={{ margin: 12, backgroundColor: `${colors.orange}18`, borderRadius: 16, borderWidth: 1, borderColor: `${colors.orange}40`, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12 }}>
-          <View style={{ width: 38, height: 38, borderRadius: 11, backgroundColor: `${colors.orange}30`, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
-            <Text style={{ fontSize: 20 }}>👆</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }}>Discover events — swipe to decide</Text>
-            <Text style={{ fontSize: 12, color: colors.gray, marginTop: 2 }}>Swipe right = going · left = not now</Text>
-          </View>
-          <Ionicons name={discoverOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.orange} />
-        </Pressable>
 
-        {/* Swipe cards preview (collapsed) */}
-        {discoverOpen && (
-          <View style={{ marginHorizontal: 12, marginBottom: 12, gap: 8 }}>
-            {events.slice(0, 2).map((event) => (
-              <Pressable key={event.id} onPress={() => router.push(`/event/${event.id}`)}
-                style={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 11, color: colors.orange, fontWeight: '700' }}>{event.sport}</Text>
-                  <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }} numberOfLines={1}>{event.title}</Text>
-                  <Text style={{ fontSize: 11, color: colors.gray }}>{event.time} · {event.venue}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <Pressable style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: '#EF444420', alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 16 }}>✗</Text>
+        {/* ══════════════ FOR YOU TAB ══════════════ */}
+        {feedTab === 'For You' && (
+          <>
+            {/* Discover events banner */}
+            <Pressable onPress={() => setDiscoverOpen((v) => !v)}
+              style={{ margin: 12, backgroundColor: `${colors.orange}18`, borderRadius: 16, borderWidth: 1, borderColor: `${colors.orange}40`, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12 }}>
+              <View style={{ width: 38, height: 38, borderRadius: 11, backgroundColor: `${colors.orange}30`, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                <Text style={{ fontSize: 20 }}>👆</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }}>Discover events — swipe to decide</Text>
+                <Text style={{ fontSize: 12, color: colors.gray, marginTop: 2 }}>Swipe right = going · left = not now</Text>
+              </View>
+              <Ionicons name={discoverOpen ? 'chevron-up' : 'chevron-down'} size={16} color={colors.orange} />
+            </Pressable>
+
+            {discoverOpen && (
+              <View style={{ marginHorizontal: 12, marginBottom: 12, gap: 8 }}>
+                {events.slice(0, 2).map((event) => (
+                  <Pressable key={event.id} onPress={() => router.push(`/event/${event.id}`)}
+                    style={{ backgroundColor: colors.card, borderRadius: 14, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 11, color: colors.orange, fontWeight: '700' }}>{event.sport}</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#fff' }} numberOfLines={1}>{event.title}</Text>
+                      <Text style={{ fontSize: 11, color: colors.gray }}>{event.time} · {event.venue}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: '#EF444420', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 16 }}>✗</Text>
+                      </View>
+                      <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: `${colors.green}20`, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 16 }}>✓</Text>
+                      </View>
+                    </View>
                   </Pressable>
-                  <Pressable style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: `${colors.green}20`, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text style={{ fontSize: 16 }}>✓</Text>
-                  </Pressable>
-                </View>
-              </Pressable>
-            ))}
-          </View>
+                ))}
+              </View>
+            )}
+
+            {/* Post composer */}
+            <PostComposer
+              user={user} composerOpen={composerOpen} setComposerOpen={setComposerOpen}
+              postText={postText} setPostText={setPostText}
+              postImages={postImages} setPostImages={setPostImages}
+              pickPostImage={pickPostImage} submitPost={submitPost}
+            />
+
+            {/* Posts */}
+            <View style={{ gap: 1 }}>
+              {posts.map((post) => (
+                <PostCard key={post.id} post={post} onLike={() => toggleLike(post.id)} />
+              ))}
+            </View>
+          </>
         )}
 
-        {/* ── Post composer ── */}
-        <View style={{ marginHorizontal: 12, marginBottom: 12, backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
-          {!composerOpen ? (
-            <Pressable onPress={() => setComposerOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, gap: 10 }}>
-              <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: '#fff', fontWeight: '900', fontSize: 14 }}>{user.initial}</Text>
+        {/* ══════════════ FOLLOWING TAB ══════════════ */}
+        {feedTab === 'Following' && (
+          <>
+            {followingPosts.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingTop: 60, paddingHorizontal: 32, gap: 12 }}>
+                <Text style={{ fontSize: 40 }}>👥</Text>
+                <Text style={{ fontSize: 18, fontWeight: '900', color: '#fff', textAlign: 'center' }}>Follow athletes to see their posts</Text>
+                <Text style={{ fontSize: 13, color: colors.gray, textAlign: 'center', lineHeight: 20 }}>Head to Discover to find athletes in your sport and area</Text>
+                <Pressable onPress={() => setFeedTab('Discover')}
+                  style={{ marginTop: 8, backgroundColor: colors.orange, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12 }}>
+                  <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>Find Athletes</Text>
+                </Pressable>
               </View>
-              <Text style={{ flex: 1, color: colors.gray, fontSize: 14 }}>Share a moment, workout, or event recap...</Text>
-              <Ionicons name="camera-outline" size={22} color={colors.gray} />
-            </Pressable>
-          ) : (
-            <View style={{ padding: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-                <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center' }}>
-                  <Text style={{ color: '#fff', fontWeight: '900', fontSize: 14 }}>{user.initial}</Text>
-                </View>
-                <TextInput
-                  value={postText}
-                  onChangeText={setPostText}
-                  placeholder="What's your moment?"
-                  placeholderTextColor={colors.gray}
-                  multiline
-                  autoFocus
-                  style={{ flex: 1, color: '#fff', fontSize: 14, lineHeight: 20, minHeight: 60, textAlignVertical: 'top' }}
+            ) : (
+              <>
+                {/* Post composer */}
+                <PostComposer
+                  user={user} composerOpen={composerOpen} setComposerOpen={setComposerOpen}
+                  postText={postText} setPostText={setPostText}
+                  postImages={postImages} setPostImages={setPostImages}
+                  pickPostImage={pickPostImage} submitPost={submitPost}
                 />
-              </View>
+                <View style={{ gap: 1 }}>
+                  {followingPosts.map((post) => (
+                    <PostCard key={post.id} post={post} onLike={() => toggleLike(post.id)} />
+                  ))}
+                </View>
+              </>
+            )}
+          </>
+        )}
 
-              {/* Image previews */}
-              {postImages.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
-                  {postImages.map((uri, i) => (
-                    <View key={i} style={{ marginRight: 8, position: 'relative' }}>
-                      <Image source={{ uri }} style={{ width: 80, height: 80, borderRadius: 10 }} />
-                      <Pressable onPress={() => setPostImages((prev) => prev.filter((_, idx) => idx !== i))}
-                        style={{ position: 'absolute', top: -6, right: -6, backgroundColor: '#EF4444', borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>×</Text>
+        {/* ══════════════ DISCOVER TAB ══════════════ */}
+        {feedTab === 'Discover' && (
+          <View style={{ padding: 12, gap: 16 }}>
+
+            {/* Upcoming Events */}
+            <View>
+              <Text style={{ fontSize: 16, fontWeight: '900', color: '#fff', marginBottom: 10 }}>Upcoming Events Near You</Text>
+              <View style={{ gap: 10 }}>
+                {events.map((ev) => (
+                  <Pressable key={ev.id} onPress={() => router.push(`/event/${ev.id}`)}
+                    style={{ backgroundColor: colors.card, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.border }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <View style={{ backgroundColor: `${colors.orange}20`, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: colors.orange }}>{ev.sport}</Text>
+                      </View>
+                      <Text style={{ fontSize: 12, color: colors.orange, fontWeight: '700' }}>{ev.cost}</Text>
+                    </View>
+                    <Text style={{ fontSize: 15, fontWeight: '800', color: '#fff', marginBottom: 4 }}>{ev.title}</Text>
+                    <Text style={{ fontSize: 12, color: colors.gray, marginBottom: 2 }}>🕐 {ev.time}</Text>
+                    <Text style={{ fontSize: 12, color: colors.gray, marginBottom: 10 }}>📍 {ev.venue} · {ev.area}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flex: 1, marginRight: 12 }}>
+                        <View style={{ height: 4, backgroundColor: colors.border, borderRadius: 2, overflow: 'hidden', marginBottom: 3 }}>
+                          <View style={{ height: 4, width: `${(ev.rsvp / ev.max) * 100}%`, backgroundColor: colors.orange, borderRadius: 2 }} />
+                        </View>
+                        <Text style={{ fontSize: 11, color: colors.gray }}>{ev.rsvp}/{ev.max} going · {ev.level}</Text>
+                      </View>
+                      <Pressable onPress={() => toggleRsvp(ev.id)}
+                        style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10, borderWidth: 1.5, borderColor: rsvps[ev.id] ? colors.green : colors.orange, backgroundColor: rsvps[ev.id] ? `${colors.green}15` : colors.orange }}>
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: rsvps[ev.id] ? colors.green : '#fff' }}>
+                          {rsvps[ev.id] ? '✓ Going' : 'RSVP'}
+                        </Text>
                       </Pressable>
                     </View>
-                  ))}
-                </ScrollView>
-              )}
-
-              {/* Toolbar */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10, gap: 10 }}>
-                <Pressable onPress={pickPostImage} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Ionicons name="image-outline" size={20} color={colors.gray} />
-                  <Text style={{ color: colors.gray, fontSize: 12 }}>Photo</Text>
-                </Pressable>
-                <View style={{ flex: 1 }} />
-                <Pressable onPress={() => { setComposerOpen(false); setPostText(''); setPostImages([]); }}>
-                  <Text style={{ color: colors.gray, fontSize: 13 }}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  onPress={submitPost}
-                  disabled={!postText.trim() && postImages.length === 0}
-                  style={{ backgroundColor: postText.trim() || postImages.length > 0 ? colors.orange : colors.card2, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 7 }}
-                >
-                  <Text style={{ color: postText.trim() || postImages.length > 0 ? '#fff' : colors.gray, fontWeight: '800', fontSize: 13 }}>Post</Text>
-                </Pressable>
+                  </Pressable>
+                ))}
               </View>
             </View>
-          )}
-        </View>
 
-        {/* ── Community posts ── */}
-        <View style={{ gap: 1 }}>
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} onLike={() => toggleLike(post.id)} />
-          ))}
-        </View>
+            {/* Suggested Packs */}
+            <View>
+              <Text style={{ fontSize: 16, fontWeight: '900', color: '#fff', marginBottom: 10 }}>Packs in Your Area</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -12 }} contentContainerStyle={{ paddingHorizontal: 12, gap: 10 }}>
+                {packs.map((pack) => (
+                  <View key={pack.id} style={{ width: 160, backgroundColor: colors.card, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.border }}>
+                    <View style={{ width: 44, height: 44, borderRadius: 13, backgroundColor: `${colors.orange}20`, alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 22 }}>{pack.icon}</Text>
+                    </View>
+                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#fff', marginBottom: 2 }} numberOfLines={1}>{pack.name}</Text>
+                    <Text style={{ fontSize: 11, color: colors.gray, marginBottom: 10 }}>{pack.members} members</Text>
+                    <View style={{ backgroundColor: colors.orange, borderRadius: 10, paddingVertical: 7, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: '#fff' }}>View Pack</Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Suggested Athletes */}
+            <View>
+              <Text style={{ fontSize: 16, fontWeight: '900', color: '#fff', marginBottom: 10 }}>Athletes to Follow</Text>
+              <View style={{ gap: 10 }}>
+                {SUGGESTED_ATHLETES.map((athlete) => (
+                  <View key={athlete.id} style={{ backgroundColor: colors.card, borderRadius: 14, padding: 12, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View style={{ width: 44, height: 44, borderRadius: 13, backgroundColor: `${athlete.avatarColor}25`, borderWidth: 1, borderColor: `${athlete.avatarColor}50`, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ fontSize: 18, fontWeight: '800', color: athlete.avatarColor }}>{athlete.initial}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: '#fff' }}>{athlete.name}</Text>
+                      <Text style={{ fontSize: 12, color: colors.gray }}>{athlete.sport} · {athlete.xp.toLocaleString()} XP</Text>
+                    </View>
+                    <Pressable onPress={() => setFollowed((p) => ({ ...p, [athlete.id]: !p[athlete.id] }))}
+                      style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10, borderWidth: 1.5, borderColor: followed[athlete.id] ? colors.green : colors.orange, backgroundColor: followed[athlete.id] ? `${colors.green}15` : `${colors.orange}15` }}>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: followed[athlete.id] ? colors.green : colors.orange }}>
+                        {followed[athlete.id] ? '✓ Following' : 'Follow'}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+          </View>
+        )}
 
         <View style={{ height: 90 }} />
       </ScrollView>
@@ -235,13 +312,77 @@ export default function FeedScreen() {
   );
 }
 
+// ── Post Composer component ───────────────────────────────────────────────────
+function PostComposer({ user, composerOpen, setComposerOpen, postText, setPostText, postImages, setPostImages, pickPostImage, submitPost }: any) {
+  return (
+    <View style={{ marginHorizontal: 12, marginBottom: 12, backgroundColor: colors.card, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
+      {!composerOpen ? (
+        <Pressable onPress={() => setComposerOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', padding: 12, gap: 10 }}>
+          <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ color: '#fff', fontWeight: '900', fontSize: 14 }}>{user.initial}</Text>
+          </View>
+          <Text style={{ flex: 1, color: colors.gray, fontSize: 14 }}>Share a moment, workout, or event recap...</Text>
+          <Ionicons name="camera-outline" size={22} color={colors.gray} />
+        </Pressable>
+      ) : (
+        <View style={{ padding: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+            <View style={{ width: 36, height: 36, borderRadius: 11, backgroundColor: user.avatarColor, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: '#fff', fontWeight: '900', fontSize: 14 }}>{user.initial}</Text>
+            </View>
+            <TextInput
+              value={postText}
+              onChangeText={setPostText}
+              placeholder="What's your moment?"
+              placeholderTextColor={colors.gray}
+              multiline
+              autoFocus
+              style={{ flex: 1, color: '#fff', fontSize: 14, lineHeight: 20, minHeight: 60, textAlignVertical: 'top' }}
+            />
+          </View>
+          {postImages.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+              {postImages.map((uri: string, i: number) => (
+                <View key={i} style={{ marginRight: 8, position: 'relative' }}>
+                  <Image source={{ uri }} style={{ width: 80, height: 80, borderRadius: 10 }} />
+                  <Pressable onPress={() => setPostImages((prev: string[]) => prev.filter((_: string, idx: number) => idx !== i))}
+                    style={{ position: 'absolute', top: -6, right: -6, backgroundColor: '#EF4444', borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>×</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 10, gap: 10 }}>
+            <Pressable onPress={pickPostImage} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="image-outline" size={20} color={colors.gray} />
+              <Text style={{ color: colors.gray, fontSize: 12 }}>Photo</Text>
+            </Pressable>
+            <View style={{ flex: 1 }} />
+            <Pressable onPress={() => { setComposerOpen(false); setPostText(''); setPostImages([]); }}>
+              <Text style={{ color: colors.gray, fontSize: 13 }}>Cancel</Text>
+            </Pressable>
+            <Pressable
+              onPress={submitPost}
+              disabled={!postText.trim() && postImages.length === 0}
+              style={{ backgroundColor: postText.trim() || postImages.length > 0 ? colors.orange : colors.card2, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 7 }}
+            >
+              <Text style={{ color: postText.trim() || postImages.length > 0 ? '#fff' : colors.gray, fontWeight: '800', fontSize: 13 }}>Post</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ── PostCard component ────────────────────────────────────────────────────────
 function PostCard({ post, onLike }: { post: any; onLike: () => void }) {
   const [, setShowComments] = useState(false);
   const imgW = (SCREEN_W - 24 - 2) / 2;
 
   return (
     <View style={{ backgroundColor: colors.card, marginHorizontal: 12, marginBottom: 10, borderRadius: 18, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' }}>
-      {/* Author row */}
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, paddingBottom: 8 }}>
         <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: post.avatarColor, alignItems: 'center', justifyContent: 'center', marginRight: 10 }}>
           <Text style={{ color: '#fff', fontWeight: '900', fontSize: 16 }}>{post.initial}</Text>
@@ -258,12 +399,10 @@ function PostCard({ post, onLike }: { post: any; onLike: () => void }) {
         <Text style={{ color: colors.orange, fontWeight: '700', fontSize: 12 }}>{post.xp}</Text>
       </View>
 
-      {/* Content */}
       <Text style={{ color: colors.text, fontSize: 14, lineHeight: 21, paddingHorizontal: 12, paddingBottom: post.images.length > 0 ? 10 : 12 }}>
         {post.content}
       </Text>
 
-      {/* Images */}
       {post.images.length === 1 && (
         <Image source={{ uri: post.images[0] }} style={{ width: '100%', height: 200 }} resizeMode="cover" />
       )}
@@ -292,7 +431,6 @@ function PostCard({ post, onLike }: { post: any; onLike: () => void }) {
         </View>
       )}
 
-      {/* Reactions */}
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, gap: 18 }}>
         <Pressable onPress={onLike} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
           <Ionicons name={post.liked ? 'heart' : 'heart-outline'} size={18} color={post.liked ? '#EF4444' : colors.gray} />
