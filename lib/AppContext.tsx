@@ -42,10 +42,10 @@ const MOCK_EVENTS = [
 ];
 
 const MOCK_PACKS = [
-  { id: 'p1', name: 'Koramangala Runners', sport: 'Running', members: 312, icon: '🏃', verified: true, description: 'The most active running community in Koramangala.' },
-  { id: 'p2', name: 'Bangalore Cyclists', sport: 'Cycling', members: 245, icon: '🚴', verified: true, description: 'Weekend warriors and weekday commuters.' },
-  { id: 'p3', name: 'Zen Yoga Collective', sport: 'Yoga', members: 189, icon: '🧘', verified: false, description: 'Morning yoga for all levels.' },
-  { id: 'p4', name: 'Weekend Footballers', sport: 'Football', members: 156, icon: '⚽', verified: false, description: 'Casual football every weekend.' },
+  { id: 'p1', name: 'Koramangala Runners', sport: 'Running', level: 'All levels', area: 'Koramangala', members: 312, events: 18, streak: 12, xp: 38000, icon: '🏃', verified: true, description: 'The most active running community in Koramangala.', tagline: 'Run together, grow together.' },
+  { id: 'p2', name: 'Bangalore Cyclists', sport: 'Cycling', level: 'Intermediate', area: 'Bangalore', members: 245, events: 24, streak: 8, xp: 41000, icon: '🚴', verified: true, description: 'Weekend warriors and weekday commuters.', tagline: 'Every hill is a milestone.' },
+  { id: 'p3', name: 'Zen Yoga Collective', sport: 'Yoga', level: 'Beginner', area: 'Lalbagh', members: 189, events: 10, streak: 21, xp: 22000, icon: '🧘', verified: false, description: 'Morning yoga for all levels.', tagline: 'Breathe. Move. Be.' },
+  { id: 'p4', name: 'Weekend Footballers', sport: 'Football', level: 'Casual', area: 'Indiranagar', members: 156, events: 14, streak: 5, xp: 17000, icon: '⚽', verified: false, description: 'Casual football every weekend.', tagline: 'The beautiful game, every week.' },
 ];
 
 export const MOCK_POSTS = [

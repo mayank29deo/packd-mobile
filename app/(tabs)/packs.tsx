@@ -1,11 +1,13 @@
 import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useApp } from '../../lib/AppContext';
 import { colors } from '../../lib/colors';
 
 export default function PacksScreen() {
   const { packs, joinedPacks, toggleJoinPack } = useApp();
+  const router = useRouter();
   const [search, setSearch] = useState('');
 
   const filtered = packs.filter((p) =>
@@ -32,25 +34,29 @@ export default function PacksScreen() {
           <View style={{ marginBottom: 4 }}>
             <Text style={{ fontSize: 13, fontWeight: '800', color: '#fff', marginBottom: 8 }}>Your Packs</Text>
             {packs.filter((p) => joinedPacks[p.id]).map((pack) => (
-              <PackCard key={pack.id} pack={pack} joined={true} onToggle={() => toggleJoinPack(pack.id)} />
+              <PackCard key={pack.id} pack={pack} joined={true}
+                onToggle={() => toggleJoinPack(pack.id)}
+                onPress={() => router.push(`/pack/${pack.id}` as any)} />
             ))}
           </View>
         )}
 
         <Text style={{ fontSize: 13, fontWeight: '800', color: '#fff', marginBottom: 4 }}>Discover Packs</Text>
         {filtered.map((pack) => (
-          <PackCard key={pack.id} pack={pack} joined={!!joinedPacks[pack.id]} onToggle={() => toggleJoinPack(pack.id)} />
+          <PackCard key={pack.id} pack={pack} joined={!!joinedPacks[pack.id]}
+            onToggle={() => toggleJoinPack(pack.id)}
+            onPress={() => router.push(`/pack/${pack.id}` as any)} />
         ))}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function PackCard({ pack, joined, onToggle }: { pack: any; joined: boolean; onToggle: () => void }) {
+function PackCard({ pack, joined, onToggle, onPress }: { pack: any; joined: boolean; onToggle: () => void; onPress: () => void }) {
   return (
-    <View style={{ backgroundColor: colors.card, borderRadius: 18, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: joined ? colors.green : colors.border }}>
+    <Pressable onPress={onPress} style={{ backgroundColor: colors.card, borderRadius: 18, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: joined ? colors.green : colors.border }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: colors.card2, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+        <View style={{ width: 52, height: 52, borderRadius: 14, backgroundColor: `${colors.orange}20`, borderWidth: 1, borderColor: `${colors.orange}30`, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
           <Text style={{ fontSize: 26 }}>{pack.icon}</Text>
         </View>
         <View style={{ flex: 1 }}>
@@ -60,7 +66,7 @@ function PackCard({ pack, joined, onToggle }: { pack: any; joined: boolean; onTo
           </View>
           <Text style={{ fontSize: 12, color: colors.gray }}>{pack.sport} · {pack.members} members</Text>
         </View>
-        <Pressable onPress={onToggle}
+        <Pressable onPress={(e) => { e.stopPropagation?.(); onToggle(); }}
           style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, borderWidth: 1.5, borderColor: joined ? colors.green : colors.border, backgroundColor: joined ? `${colors.green}15` : 'transparent' }}>
           <Text style={{ fontSize: 12, fontWeight: '700', color: joined ? colors.green : colors.gray }}>
             {joined ? '✓ Member' : 'Join'}
@@ -70,6 +76,6 @@ function PackCard({ pack, joined, onToggle }: { pack: any; joined: boolean; onTo
       {pack.description && (
         <Text style={{ fontSize: 12, color: colors.gray, marginTop: 10, lineHeight: 18 }}>{pack.description}</Text>
       )}
-    </View>
+    </Pressable>
   );
 }

@@ -33,6 +33,7 @@ export default function RootLayout() {
           <Stack.Screen name="messages" options={{ presentation: 'card' }} />
           <Stack.Screen name="notifications" options={{ presentation: 'card' }} />
           <Stack.Screen name="chat/[userId]" options={{ presentation: 'card' }} />
+          <Stack.Screen name="pack/[id]" options={{ presentation: 'card' }} />
         </Stack>
       </AuthGuard>
     </AppProvider>
