@@ -1,11 +1,10 @@
 import { View, Text, ScrollView, Pressable, TextInput } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../../lib/AppContext';
 import { colors } from '../../lib/colors';
 
-const PACK_TABS = ['Feed', 'Events', 'Members', 'Leaderboard'];
+const PACK_TABS = ['Feed', 'Events', 'Members', 'Board'];
 
 const PACK_FEED = [
   { id: 'pf1', user: 'Arjun M.',  avatar: 'A', avatarColor: '#E8451A', text: 'Set a new PB! 10K in 45:22 🔥', time: '30m ago', likes: 18 },
@@ -27,33 +26,24 @@ const sortedLB = [...LEADERBOARD].sort((a, b) => b.xp - a.xp);
 
 export default function PacksScreen() {
   const { packs, joinedPacks, toggleJoinPack, events, rsvps, toggleRsvp } = useApp();
-  const [tab, setTab]         = useState('Feed');
-  const [discover, setDiscover] = useState(false);
-  const [search, setSearch]   = useState('');
+  const [tab, setTab]       = useState('Feed');
+  const [search, setSearch] = useState('');
   const [feedLikes, setFeedLikes] = useState<Record<string, boolean>>({});
 
   // Pick first joined pack as active
   const joinedList = packs.filter((p) => joinedPacks[p.id]);
   const activePack = joinedList[0] ?? null;
 
-  // ── DISCOVER MODE ─────────────────────────────────────────────────────────────
-  if (discover || !activePack) {
+  // ── DISCOVER MODE (no packs joined yet) ──────────────────────────────────────
+  if (!activePack) {
     const filtered = packs.filter(
       (p) => p.name.toLowerCase().includes(search.toLowerCase()) ||
              p.sport.toLowerCase().includes(search.toLowerCase())
     );
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          {activePack && (
-            <Pressable onPress={() => setDiscover(false)}
-              style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border }}>
-              <Ionicons name="arrow-back" size={18} color={colors.gray} />
-            </Pressable>
-          )}
-          <Text style={{ fontSize: 20, fontWeight: '900', color: '#fff', flex: 1 }}>
-            {activePack ? 'Discover Packs' : 'Packs'}
-          </Text>
+        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+          <Text style={{ fontSize: 20, fontWeight: '900', color: '#fff' }}>Packs</Text>
         </View>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 10 }}>
           <TextInput
@@ -92,9 +82,9 @@ export default function PacksScreen() {
         {/* ── Hero ── */}
         <View style={{ backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16 }}>
 
-          {/* Top row: switcher + discover button */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+          {/* Pack switcher chips */}
+          {joinedList.length > 1 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }}>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 {joinedList.map((p) => (
                   <View key={p.id}
@@ -104,12 +94,7 @@ export default function PacksScreen() {
                 ))}
               </View>
             </ScrollView>
-            <Pressable onPress={() => setDiscover(true)}
-              style={{ marginLeft: 10, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, backgroundColor: colors.card2, borderWidth: 1, borderColor: colors.border, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <Ionicons name="search" size={12} color={colors.gray} />
-              <Text style={{ fontSize: 11, fontWeight: '600', color: colors.gray }}>Discover</Text>
-            </Pressable>
-          </View>
+          )}
 
           {/* Pack info */}
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginBottom: 10 }}>
@@ -117,15 +102,14 @@ export default function PacksScreen() {
               <Text style={{ fontSize: 30 }}>{activePack.icon}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                <Text style={{ fontSize: 18, fontWeight: '900', color: '#fff' }}>{activePack.name}</Text>
-                {activePack.verified && <Text style={{ color: colors.orange, fontSize: 13 }}>✓</Text>}
-              </View>
+              <Text style={{ fontSize: 18, fontWeight: '900', color: '#fff', marginBottom: 2 }}>
+                {activePack.name}{activePack.verified ? <Text style={{ color: colors.orange, fontSize: 14 }}> ✓</Text> : ''}
+              </Text>
               <Text style={{ fontSize: 12, color: colors.gray, marginBottom: 2 }}>{activePack.sport} · {(activePack as any).level}</Text>
               <Text style={{ fontSize: 12, color: colors.gray }}>📍 {(activePack as any).area}</Text>
             </View>
             <Pressable onPress={() => toggleJoinPack(activePack.id)}
-              style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12, borderWidth: 1.5, borderColor: colors.green, backgroundColor: `${colors.green}15` }}>
+              style={{ paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12, borderWidth: 1.5, borderColor: colors.green, backgroundColor: `${colors.green}15`, flexShrink: 0 }}>
               <Text style={{ fontSize: 11, fontWeight: '700', color: colors.green }}>✓ Member</Text>
             </Pressable>
           </View>
@@ -247,7 +231,7 @@ export default function PacksScreen() {
           ))}
 
           {/* LEADERBOARD */}
-          {tab === 'Leaderboard' && (
+          {tab === 'Board' && (
             <>
               <View style={{ alignItems: 'center', marginBottom: 14 }}>
                 <Text style={{ fontSize: 11, color: colors.gray, marginBottom: 2 }}>March Sprint</Text>
