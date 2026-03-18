@@ -51,7 +51,7 @@ export default function LoginScreen() {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      const redirectTo = AuthSession.makeRedirectUri({ scheme: 'packd' });
+      const redirectTo = AuthSession.makeRedirectUri();
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
