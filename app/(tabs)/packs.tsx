@@ -273,7 +273,7 @@ export default function PacksScreen() {
           )}
 
         </View>
-        <View style={{ height: 20 }} />
+        <View style={{ height: 90 }} />
       </ScrollView>
     </SafeAreaView>
   );

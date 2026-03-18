@@ -229,7 +229,7 @@ export default function FeedScreen() {
           ))}
         </View>
 
-        <View style={{ height: 20 }} />
+        <View style={{ height: 90 }} />
       </ScrollView>
     </SafeAreaView>
   );

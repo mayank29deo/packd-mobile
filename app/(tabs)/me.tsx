@@ -296,6 +296,7 @@ export default function MeScreen() {
           </View>
         </View>
 
+        <View style={{ height: 90 }} />
       </ScrollView>
     </SafeAreaView>
   );

@@ -99,7 +99,7 @@ export default function ExploreScreen() {
 
       {/* Content */}
       {activeTab === 'Events' ? (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 90 }}>
           {filteredEvents.map((event) => {
             const spotsLeft = event.max - event.rsvp;
             const fillPct = Math.min((event.rsvp / event.max) * 100, 100);
@@ -147,7 +147,7 @@ export default function ExploreScreen() {
           )}
         </ScrollView>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 90 }}>
           {Object.keys(joinedPacks).some((k) => joinedPacks[k]) && (
             <View style={{ marginBottom: 4 }}>
               <Text style={{ fontSize: 13, fontWeight: '800', color: '#fff', marginBottom: 8 }}>Your Packs</Text>

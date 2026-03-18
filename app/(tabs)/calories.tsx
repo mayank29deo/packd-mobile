@@ -319,7 +319,7 @@ export default function CaloriesScreen() {
 
           {/* Scan UI */}
           {!scanResult && !voiceResult && (
-            <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 90 }} showsVerticalScrollIndicator={false}>
 
               {/* Photo / Voice toggle */}
               <View style={{ flexDirection: 'row', backgroundColor: colors.card, borderRadius: 14, padding: 4, borderWidth: 1, borderColor: colors.border, gap: 4 }}>
@@ -482,7 +482,7 @@ export default function CaloriesScreen() {
 
       {/* ── TODAY TAB ── */}
       {tab === 'today' && (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 90 }} showsVerticalScrollIndicator={false}>
 
           {/* Calorie progress */}
           <View style={{ backgroundColor: colors.card, borderRadius: 20, padding: 18, borderWidth: 1, borderColor: colors.border, alignItems: 'center', gap: 10 }}>
@@ -547,7 +547,7 @@ export default function CaloriesScreen() {
 
       {/* ── INSIGHTS TAB ── */}
       {tab === 'insights' && (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 90 }} showsVerticalScrollIndicator={false}>
 
           {logs.length === 0 ? (
             /* Empty state */
