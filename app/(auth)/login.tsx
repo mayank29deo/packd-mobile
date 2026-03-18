@@ -49,7 +49,8 @@ export default function LoginScreen() {
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      const redirectTo = AuthSession.makeRedirectUri({ scheme: 'packd' });
+      // makeRedirectUri() returns exp://... in Expo Go, packd:// in production builds
+      const redirectTo = AuthSession.makeRedirectUri();
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -84,7 +85,9 @@ export default function LoginScreen() {
             <View style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: colors.orange, alignItems: 'center', justifyContent: 'center', marginBottom: 18, shadowColor: colors.orange, shadowOpacity: 0.5, shadowRadius: 20, shadowOffset: { width: 0, height: 6 }, elevation: 10 }}>
               <Text style={{ fontSize: 32, fontWeight: '900', color: '#fff' }}>P</Text>
             </View>
-            <Text style={{ fontSize: 28, fontWeight: '900', color: '#fff' }}>PACKD</Text>
+            <Text style={{ fontSize: 28, fontWeight: '900', color: '#fff' }}>
+              PACK<Text style={{ color: colors.orange }}>D</Text>
+            </Text>
             <Text style={{ fontSize: 14, color: colors.gray, marginTop: 6 }}>
               {mode === 'login' ? 'Welcome back' : 'Create your account'}
             </Text>
